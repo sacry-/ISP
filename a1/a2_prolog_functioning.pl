@@ -1,23 +1,28 @@
 
 
-% successor.pl
-%
-% zahl(0).
-% zahl(succ(X)):- zahl(X).
+% Dies muss definiert werden, damit es funktioniert.
+succ(_).
 
-% Überarbeitete Version mit succ/2
+
+% successor.pl
 zahl(0).
-zahl(Y) :- succ(X,Y), zahl(X).
+zahl(succ(X)):- zahl(X).
+
+% z.B.
+% ? zahl(0).
+% true.
+% ? zahl(succ(succ(0))).
+% true
+% ? zahl(vater(0)).
+% false.
+
+
 
 % addition_succ.pl
 % add(0,Y,Y).
 % add(succ(X),Y,succ(Z)) :-
 %  add(X,Y,Z).
-add(0, X, X).
-add(X, Y, Z) :-
-	succ(N, X),
-	succ(M, Z),
-	add(N, Y, M).
+
 
 % hanoi.pl
 transportiere(1, Von, _, Nach) :-
