@@ -3,7 +3,6 @@
 % Dies muss definiert werden, damit es funktioniert.
 succ(_).
 
-
 % successor.pl
 zahl(0).
 zahl(succ(X)):- zahl(X).
@@ -19,10 +18,27 @@ zahl(succ(X)):- zahl(X).
 
 
 % addition_succ.pl
-% add(0,Y,Y).
-% add(succ(X),Y,succ(Z)) :-
-%  add(X,Y,Z).
+add(0,Y,Y).
+add(succ(X),Y,succ(Z)) :- add(X,Y,Z).
 
+/**
+0 + 1 = X
+?- add(0,succ(0),X).
+X = succ(0).
+
+2 + 1 = X
+?- add(succ(succ(0)),succ(0),X).
+X = succ(succ(succ(0))).
+
+X + 1 = 1
+?- add(X,succ(0),succ(0)).
+X = 0 ;
+false.
+
+X + 1 = 0
+?- add(X,succ(0),0).
+false.
+**/
 
 % hanoi.pl
 transportiere(1, Von, _, Nach) :-
