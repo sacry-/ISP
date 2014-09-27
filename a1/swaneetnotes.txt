@@ -1,0 +1,28 @@
+
+
+Aufgabe 2:
+
+successor
+
+? zahl(succ(succ(0))).
+zahl(succ(0)).
+zahl(0).
+true.
+
+? add(succ(0), succ(succ(0)), X).
+X = succ(Z), add(0, succ(succ(0)), Z).
+X = succ(Z), Z = succ(succ(0)).
+X = succ(succ(succ(0))), Z = succ(succ(0)).
+
+
+
+? add(X, succ(0), succ(0)).
+X = 0, succ(0) = succ(0).
+X = 0;	% erste Lösung
+X = succ(X2), Z = 0, add(X2, succ(0), 0)
+X = succ(0), Z = 0, X2 = 0, succ(0) = 0.
+X = succ(0), Z = 0, X2 = 0, false.
+false.	% keine zweite Lösung.
+
+
+
