@@ -1,4 +1,16 @@
 
+/**
+
+bob  	      mary             hans         sabine
+ |-----------|                |-------------|
+	|        |                    |        |
+heinrich  judy                klaus    foxie  
+						|-------------------|
+						     |       |
+						   emma   jeremie
+						   
+**/
+
 male(bob).
 male(hans).
 male(heinrich).
