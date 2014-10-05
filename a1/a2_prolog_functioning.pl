@@ -21,6 +21,10 @@ zahl(succ(X)):- zahl(X).
 add(0,Y,Y).
 add(succ(X),Y,succ(Z)) :- add(X,Y,Z).
 
+% mult(X,Y,Z).
+mult(0,_,0).
+mult(succ(X),Y,R) :- add(Y,Z,R), mult(X,Y,Z).
+
 /**
 0 + 1 = X
 ?- add(0,succ(0),X).
