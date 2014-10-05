@@ -5,7 +5,9 @@ bob|-----------|mary      	hans|-------------|sabine            elvira
      |       |                    |         |                      |
   heinrich  judy|--------------|klaus     foxie|-----|horst|-----|agne (test-tube-baby)
                   |          |                    |           |
-                emma       jeremie              dieter      hubert
+                emma       jeremie              dieter      hubert|---------|kloeten
+                                        															 |
+                                                                     loeten
 						   
 **/
 
@@ -17,6 +19,8 @@ male(jeremie).
 male(horst).
 male(dieter).
 male(hubert).
+male(kloeten).
+male(loeten).
 
 female(mary).
 female(judy).
@@ -46,6 +50,9 @@ parent(horst,dieter).
 parent(agne, hubert).
 parent(horst, hubert).
 parent(elvira, agne).
+
+parent(kloeten,loeten).
+parent(dieter,loeten).
 
 mother(X,Y) :- parent(X,Y),female(X).
 father(X,Y) :- parent(X,Y),male(X).
@@ -115,5 +122,18 @@ halfSibling(X,Y) :-
 	father(F,Y),mother(M1,Y),
 	M\=M1,X\=Y.
 
+gay(X,Y) :-
+	married(X,Y),
+	male(X),
+	male(Y).
+
+gay(X,Y) :-
+	married(X,Y),
+	female(X),
+	female(Y).
+
+testTubeBaby(X) :-
+	mother(Z,X),
+	not(father(_,X)).
 
 
