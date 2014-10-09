@@ -54,6 +54,12 @@ parent(elvira, agne).
 parent(kloeten,loeten).
 parent(dieter,loeten).
 
+mr(a,b).
+
+married2(X,Y) :- mr(X,Y).
+married2(X,Y) :- mr(Y,X).
+
+
 mother(X,Y) :- parent(X,Y),female(X).
 father(X,Y) :- parent(X,Y),male(X).
 
@@ -91,6 +97,9 @@ fatherInLaw(X,Y) :-
 	father(X,Z),
 	married(Z,Y).
 
+% sibling(X,Y) :- sibling(Y,X).
+% Terminiert nicht, da Abbruchbedingung verdeckt wird.
+
 sibling(X,Y) :- 
 	mother(M,X),father(F,X),
 	mother(M,Y),father(F,Y),
@@ -122,18 +131,11 @@ halfSibling(X,Y) :-
 	father(F,Y),mother(M1,Y),
 	M\=M1,X\=Y.
 
-gay(X,Y) :-
-	married(X,Y),
-	male(X),
-	male(Y).
-
-gay(X,Y) :-
-	married(X,Y),
-	female(X),
-	female(Y).
-
 testTubeBaby(X) :-
 	mother(Z,X),
 	not(father(_,X)).
 
+testTubeBaby2(X) :-
+	not(father(_,X)),
+	mother(Z,X).
 
