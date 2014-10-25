@@ -45,8 +45,10 @@ parent(sabine,foxie).
 
 parent(judy,emma).
 parent(judy,jeremie).
+parent(judy,kai).
 parent(klaus,emma).
 parent(klaus,jeremie).
+parent(klaus,kai).
 
 parent(foxie,dieter).
 parent(horst,dieter).
@@ -111,6 +113,12 @@ sibling(X,Y) :-
 	mother(M,Y),father(F,Y),
 	X\=Y.
 
+sister(X,Y) :- 
+	female(X),sibling(X,Y).
+
+brother(X,Y) :- 
+	male(X),sibling(X,Y).
+
 uncle(X,Y) :-
 	sibling(X,Z),
 	parent(Z,Y),
@@ -148,19 +156,36 @@ testTubeBaby2(X) :-
 
 
 
-question(Sem) --> open_q(Sem).
-question(Sem) --> closed_q(Sem).
+question --> open_q(Sem).
+question --> closed_q(Sem).
 
-open_q(Sem) --> ip(N,G), v(N,G), rel(N,G, Sem).
-closed_q(Sem) --> is_w(N,G), np(N,G,Name), rel(N,G, Sem).
+open_q(Sem) -->
+							ip(N,G),
+							v(N,G),
+							rel(N,G, [Rel, Name2]),
+							{
+								Ques =.. [Rel, Wer, Name2], Ques,
+								write(Wer),
+								write('\n'),
+								fail
+							}.
+closed_q(Ques) -->
+							is_w(N,G),
+							name(N,G, Name1),
+							rel(N,G, [Rel, Name2]),
+							{ Ques =.. [Rel, Name1, Name2], Ques }.
 
-rel(N,G, Sem) --> det(N,G), n(N,G, Sem).
-rel(N,G, Sem) --> det(N,G), n(N,G, Sem), pp.
+rel(N,G, Sem) --> det(N,G), n(N,G, Sem). % 1: wird nicht verwendet
+rel(N,G, [Sem, Name]) --> det(N,G), n(N,G, Sem), pp(Name).
 
 np(N,G,Name) --> name(N,G, Name).
-np(N,G,Name) --> rel(N,G, Name).
+np(N,G,Sem)  --> rel(N,G, Sem).
+% 2: welche Semantik hat np?
+% Vielleicht: np hat Name und Relation. Je nach Fall,
+% wird in rel/3 entweder eine intermediaere Variable erzeugt
+% oder der Name einfach als Argument angefuegt.
 
-pp --> prep, np(_,_).
+pp(Name) --> prep, np(_,_,Name).
 
 vp --> v.
 vp --> v, np.
@@ -179,9 +204,8 @@ det_u(N,G) --> [X], {lex(X,_,det_u, N,G)}.
 
 /*
 Positivbeispiele:
-question([ist,horst,der,onkel,von,emma],[]).
-question([wer,ist,der,onkel,von,X],[]).
-question([ist,der,onkel,von,agne,der,X,von,bob],[]).
+question([ist,heinrich,der,onkel,von,emma],[]).
+question([wer,ist,der,onkel,von,emma],[]).
 
 */
 

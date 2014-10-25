@@ -17,6 +17,8 @@ lex(ein, 			_, det_u, s, n).
 lex(eine, 		_, det_u, s, f).
 lex(einen, 		_, det_u, s, m).
 
+lex(bruder,	  brother,n,s, m).
+lex(schwester,sister, n,s, f).
 lex(mutter, 	mother, n, s, f).
 lex(tochter, 	daughter,n,s, f).
 lex(sohn, 		son, n,    s, m).
