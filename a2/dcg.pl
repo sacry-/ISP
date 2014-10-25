@@ -148,20 +148,17 @@ testTubeBaby2(X) :-
 
 
 
-question --> open_q(_).
-question --> closed_q(_).
+question(Sem) --> open_q(Sem).
+question(Sem) --> closed_q(Sem).
 
-open_q(N) --> ip(N,G), v(N,G), rel(N,G).
-closed_q(N) --> is_q(N).
-closed_q(N) --> has_q(N).
+open_q(Sem) --> ip(N,G), v(N,G), rel(N,G, Sem).
+closed_q(Sem) --> is_w(N,G), np(N,G,Name), rel(N,G, Sem).
 
-is_q(N) --> is_w(N,G), np(N,G), rel(N,G).
+rel(N,G, Sem) --> det(N,G), n(N,G, Sem).
+rel(N,G, Sem) --> det(N,G), n(N,G, Sem), pp.
 
-rel(N,G) --> det(N,G), n(N,G).
-rel(N,G) --> det(N,G), n(N,G), pp.
-
-np(N,G) --> name(N,G).
-np(N,G) --> rel(N,G).
+np(N,G,Name) --> name(N,G, Name).
+np(N,G,Name) --> rel(N,G, Name).
 
 pp --> prep, np(_,_).
 
@@ -173,11 +170,10 @@ det(N,G) --> det_u(N,G).
 
 ip(N,G) --> 	 [X], {lex(X,_,ip,  	N,G)}.
 is_w(N,G) -->  [X], {lex(X,_,is_w,	N,G)}.
-has_w(N,G) --> [X], {lex(X,_,has_w, N,G)}.
-n(N,G)  --> 	 [X], {lex(X,_,n,   	N,G)}.
+n(N,G, Sem)  --> 	 [X], {lex(X,Sem,n,N,G)}.
 v(N,G)  --> 	 [X], {lex(X,_,v,   	N,G)}.
 prep    --> 	 [X], {lex(X,_,prep,	_,_)}.
-name(N,G)  --> [X], {lex(X,_,name,  N,G)}.
+name(N,G, Sem)  --> [X], {lex(X,Sem,name,  N,G)}.
 det_b(N,G) --> [X], {lex(X,_,det_b, N,G)}.
 det_u(N,G) --> [X], {lex(X,_,det_u, N,G)}.
 

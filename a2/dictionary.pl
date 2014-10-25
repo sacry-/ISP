@@ -24,7 +24,7 @@ lex(vater, 		father, n, s, m).
 lex(eltern, 	parent, n, p, f).
 lex(oma, 			grandmother, n, s, f).
 lex(opa, 			grandfather, n, s, m).
-lex(tante, 		aunt n,    s, f).
+lex(tante, 		aunt, n,    s, f).
 lex(onkel,		uncle, n,  s, m).
 lex(kind, 		child, n,  s, n).
 lex(kinder, 	child, n,  p, f).
