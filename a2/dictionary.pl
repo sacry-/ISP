@@ -4,28 +4,30 @@
 lex(wer, 			newvar, ip, _, _).
 
 lex(ist, 			_, is_w, s, _).
+%lex(sind,			_, is_w, p, _).
 
 lex(ist, 			_, v, s, _).
-lex(sind,			_, v,p,_).
-lex(hat,			_, v,s,_).
+lex(sind,			_, v, p, _).
+lex(hat,			_, v, s, _).
 
 lex(der, 			_, det_b, s, m).
-lex(die, 			_, det_b, s, f).
+lex(die, 			_, det_b, s, f).    % die mutter
+lex(die, 			_, det_b, p, _).    % die eltern
 
 lex(ein, 			_, det_u, s, m).
 lex(ein, 			_, det_u, s, n).
 lex(eine, 		_, det_u, s, f).
 lex(einen, 		_, det_u, s, m).
 
-lex(bruder,	  brother,n,s, m).
-lex(schwester,sister, n,s, f).
+lex(bruder,	    brother,n,s, m).
+lex(schwester,  sister, n,s, f).
 lex(mutter, 	mother, n, s, f).
 lex(tochter, 	daughter,n,s, f).
 lex(sohn, 		son, n,    s, m).
 lex(vater, 		father, n, s, m).
 lex(eltern, 	parent, n, p, f).
-lex(oma, 			grandmother, n, s, f).
-lex(opa, 			grandfather, n, s, m).
+lex(oma,        grandmother, n, s, f).
+lex(opa,        grandfather, n, s, m).
 lex(tante, 		aunt, n,    s, f).
 lex(onkel,		uncle, n,  s, m).
 lex(kind, 		child, n,  s, n).

@@ -1,189 +1,99 @@
 :- ensure_loaded([dictionary]).
-%:- ensure_loaded([readsentence]).
-
-/**
-
-bob|-----------|mary      	hans|-------------|sabine            elvira
-     |       |                    |         |                      |
-  heinrich  judy|--------------|klaus     foxie|-----|horst|-----|agne|----|kai (test-tube-baby)
-                  |          |                    |           |
-                emma       jeremie              dieter      hubert|---------|kloeten
-                                        															 |
-                                                                     loeten
-						   
-**/
-
-male(bob).
-male(hans).
-male(heinrich).
-male(klaus).
-male(jeremie).
-male(horst).
-male(dieter).
-male(hubert).
-male(kloeten).
-male(loeten).
-male(kai).
-
-female(mary).
-female(judy).
-female(sabine).
-female(emma).
-female(foxie).
-female(agne).
-female(elvira).
-
-parent(bob,judy).
-parent(bob,heinrich).
-parent(mary,judy).
-parent(mary,heinrich).
-
-parent(hans,klaus).
-parent(sabine,klaus).
-parent(hans,foxie).
-parent(sabine,foxie).
-
-parent(judy,emma).
-parent(judy,jeremie).
-parent(judy,kai).
-parent(klaus,emma).
-parent(klaus,jeremie).
-parent(klaus,kai).
-
-parent(foxie,dieter).
-parent(horst,dieter).
-parent(agne, hubert).
-parent(horst, hubert).
-parent(elvira, agne).
-
-parent(kloeten,loeten).
-parent(dieter,loeten).
-
-mr(a,b).
-
-married2(X,Y) :- mr(X,Y).
-married2(X,Y) :- mr(Y,X).
+:- ensure_loaded([readsentence]).
+:- ensure_loaded([family_tree]).
 
 
-mother(X,Y) :- parent(X,Y),female(X).
-father(X,Y) :- parent(X,Y),male(X).
+ask :- 
+    writeln('Ask a question. Or write \"ex1.\" to \"ex4.\" for examples'),
+    read_sentence(In),
+    trim(Q,In),
+    processInput(Q).
 
-child(X,Y) :- parent(Y,X).
-son(X,Y) :- child(X,Y), male(X).
-daughter(X,Y) :- child(X,Y), female(X).
+processInput(['ex1']) :- Q = [ist,heinrich,der,onkel,von,emma], writeln(Q), question(Q,[]).
+processInput(['ex2']) :- Q = [wer,ist,der,onkel,von,emma], writeln(Q), question(Q,[]).
+processInput(['ex3']) :- Q = [wer,ist,der,sohn,von,mary], writeln(Q), question(Q,[]).
+processInput(['ex4']) :- Q = [ist,der,onkel,von,emma,der,sohn,von,mary], writeln(Q), question(Q,[]).
+processInput(['ex5']) :- Q = [wer,sind,die,eltern,von,emma], writeln(Q), question(Q,[]).
 
-married(X,Y) :- 
-	parent(X,Child), 
-	parent(Y,Child), 
-	X \= Y.
+processInput(['ex6']) :- Q = [ist,heinrich,die,_,von,_], writeln(Q), question(Q,[]).
+processInput(['ex7']) :- Q = [sind,die,mutter,von|_], writeln(Q), question(Q,[]).
 
-grandfather(X,Y) :- father(X,Z),parent(Z,Y).
-grandmother(X,Y) :- mother(X,Z),parent(Z,Y).
+processInput(Q) :- question(Q,[]).
 
-grandparent(X,Z,Y) :-
-	grandfather(X,Y),
-	grandmother(Z,Y),
-	married(X,Z).
+/*
+Positivbeispiele:
+ist heinrich der onkel von emma? ~ question([ist,heinrich,der,onkel,von,emma],[]).
+wer ist der onkel von emma? ~ question([wer,ist,der,onkel,von,emma],[]).
+wer ist ein sohn von mary? ~ question([wer,ist,der,sohn,von,mary],[]).
+ist der onkel von emma der sohn von mary? ~ question([ist,der,onkel,von,emma,der,sohn,von,mary],[]).
+wer sind die eltern von emma? ~ question([wer,sind,die,eltern,von,emma],[]).
+*/
 
-nephew(Y,X) :-
-	male(Y), child(Y,M), parent(X,M).
+/* Negativbeispiele
+question([ist,heinrich,die,_,von,_],[]). % Falsches Geschlecht wird erkannt.
+question([sind,die,mutter,von|_],[]). % Falscher Numerus wird erkannt.
 
-niece(Y,X) :-
-	female(Y), child(Y,M), parent(X,M).
+*/
 
-granddaughter(Y,X) :-
-	daughter(Y,M), parent(X,M).
+% Entfernt das ? . oder ! am ende
+trim(Q,In) :- append(Q,['.'],In).
+trim(Q,In) :- append(Q,['?'],In).
+trim(Q,In) :- append(Q,['!'],In).
 
-grandson(Y,X) :-
-	son(Y,M), parent(X,M).
-
-motherInLaw(X,Y) :-
-	mother(X,Z),
-	married(Z,Y).
-
-fatherInLaw(X,Y) :-
-	father(X,Z),
-	married(Z,Y).
-
-% sibling(X,Y) :- sibling(Y,X).
-% Terminiert nicht, da Abbruchbedingung verdeckt wird.
-
-sibling(X,Y) :- 
-	mother(M,X),father(F,X),
-	mother(M,Y),father(F,Y),
-	X\=Y.
-
-sister(X,Y) :- 
-	female(X),sibling(X,Y).
-
-brother(X,Y) :- 
-	male(X),sibling(X,Y).
-
-uncle(X,Y) :-
-	sibling(X,Z),
-	parent(Z,Y),
-	male(X).
-
-aunt(X,Y) :-
-	parent(Z,Y),
-	sibling(Z,X),
-	female(X).
-
-cousin(X,Y) :-
-	sibling(U,Z),
-	parent(Z,X),
-	parent(U,Y),
-	X\=Y.
-
-halfSibling(X,Y) :-
-	mother(M,X),father(F,X),
-	mother(M,Y),father(F1,Y),
-	F\=F1,X\=Y.
-
-halfSibling(X,Y) :-
-	father(F,X),mother(M,X),
-	father(F,Y),mother(M1,Y),
-	M\=M1,X\=Y.
-
-testTubeBaby(X) :-
-	mother(_,X),
-	not(father(_,X)).
-
-testTubeBaby2(X) :-
-	not(father(_,X)),
-	mother(_,X).
+% Uncomment this line to disable verbose
+verbose(_) :- !.    % Notiz *1
+verbose(X) :- writeln(X).
 
 
+question --> open_q.
+question --> closed_q.
 
+% wer ist der onkel von emma?
+% wer sind die eltern von emma?
+open_q -->
+		    ip(N,G),
+		    v(N,G),
+		    rel(N,G, [Rel, Name2]),
+		    {
+			    Ques =.. [Rel, Wer, Name2],
+			    verbose(Ques),
+			    Ques,
+			    write('Es ist '), writeln(Wer)
+		    }.
+% open_q --> { writeln('Niemand :(') }.
 
-question --> open_q(Sem).
-question --> closed_q(Sem).
+% ist heinrich der onkel von emma?
+closed_q -->
+		    is_w(N,G),
+		    np(N,G,Name1),
+		    rel(N,G, [Rel, Name2]),
+		    {
+		        Ques =.. [Rel, Name1, Name2],
+    		    verbose(Ques),
+    		    Ques,
+    		    writeln('Ja :)')
+		    }.
 
-open_q(Sem) -->
-							ip(N,G),
-							v(N,G),
-							rel(N,G, [Rel, Name2]),
-							{
-								Ques =.. [Rel, Wer, Name2], Ques,
-								write(Wer),
-								write('\n'),
-								fail
-							}.
-closed_q(Ques) -->
-							is_w(N,G),
-							name(N,G, Name1),
-							rel(N,G, [Rel, Name2]),
-							{ Ques =.. [Rel, Name1, Name2], Ques }.
+% ist der onkel von emma der sohn von mary?
+closed_q -->
+		    is_w(N,G),
+		    np(N,G,[Rel1, Name1]),
+		    rel(N,G, [Rel2, Name2]),
+		    {
+		        Q1 =.. [Rel1, X, Name1],
+		        Q2 =.. [Rel2, X, Name2],
+		        verbose(Q1),
+		        verbose(Q2),
+		        Q1,
+		        Q2,
+    		    writeln('Ja :)')
+		    }.
+% closed_q --> { writeln('Nein :(') }.
 
-rel(N,G, Sem) --> det(N,G), n(N,G, Sem). % 1: wird nicht verwendet
-rel(N,G, [Sem, Name]) --> det(N,G), n(N,G, Sem), pp(Name).
+rel(N,G, [Rel, Name]) --> det(N,G), n(N,G, Rel), pp(Name).
 
 np(N,G,Name) --> name(N,G, Name).
-np(N,G,Sem)  --> rel(N,G, Sem).
-% 2: welche Semantik hat np?
-% Vielleicht: np hat Name und Relation. Je nach Fall,
-% wird in rel/3 entweder eine intermediaere Variable erzeugt
-% oder der Name einfach als Argument angefuegt.
+np(N,G,Rel) --> rel(N,G, Rel).
 
 pp(Name) --> prep, np(_,_,Name).
 
@@ -193,6 +103,7 @@ vp --> v, np.
 det(N,G) --> det_b(N,G).
 det(N,G) --> det_u(N,G).
 
+% Lexikazugriff
 ip(N,G) --> 	 [X], {lex(X,_,ip,  	N,G)}.
 is_w(N,G) -->  [X], {lex(X,_,is_w,	N,G)}.
 n(N,G, Sem)  --> 	 [X], {lex(X,Sem,n,N,G)}.
@@ -202,38 +113,7 @@ name(N,G, Sem)  --> [X], {lex(X,Sem,name,  N,G)}.
 det_b(N,G) --> [X], {lex(X,_,det_b, N,G)}.
 det_u(N,G) --> [X], {lex(X,_,det_u, N,G)}.
 
-/*
-Positivbeispiele:
-question([ist,heinrich,der,onkel,von,emma],[]).
-question([wer,ist,der,onkel,von,emma],[]).
 
-*/
-
-/* Negativbeispiele
-question([ist,der,onkel,von,agne,die,X,von,bob],[]).
-
-
-*/
-
-% has_q(N) --> has_w(N,G), np(N,G), rel(_,_).
-
-% question([ist,der,onkel,von,agne,die,mutter,von,bob],[]).
-% die beiden Teilsätze besziehen sich auf das gleiche Objekt.
-% => gleiches Gender und Numerus
-
-% question([hat,bob,eine,mutter],[]).
-% die beiden Teilsätze können sich auf unterschiedliche Objekte beziehen
-% => unabhängiges Gender und Numerus
-
-% Fragen mit "Ist" und "Hat"
-% müssen also getrennt behandelt werden.
-
-% Die Integration von Hat-Fragen öffnet neue Probleme:
-% z.B. wird "Hat Bob der Vater?" akzeptiert.
-% Die Bestimmtheit/Unbestimmtheit von Ist und Hat
-% müsste zusätzlich übergeben werden.
-
-
-
-
+% *1: Das cut verhindert, dass beim Backtraking einer falschen Aussage nicht die verbose/1 auch gebacktrakt wird.
+% Sonst würden verbose-meldungen von falschen Aussagen erscheinen. (z.B. son([uncle,emma], mary))
 
