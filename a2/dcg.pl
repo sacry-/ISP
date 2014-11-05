@@ -4,7 +4,7 @@
 
 
 ask :- 
-    writeln('Ask a question. Or write \"ex1.\" to \"ex4.\" for examples'),
+    writeln('Ask a question. Or write \"ex1.\" to \"ex8.\" for examples'),
     read_sentence(In),
     trim(Q,In),
     processInput(Q).
@@ -14,9 +14,10 @@ processInput(['ex2']) :- Q = [wer,ist,der,onkel,von,emma], writeln(Q), question(
 processInput(['ex3']) :- Q = [wer,ist,der,sohn,von,mary], writeln(Q), question(Q,[]).
 processInput(['ex4']) :- Q = [ist,der,onkel,von,emma,der,sohn,von,mary], writeln(Q), question(Q,[]).
 processInput(['ex5']) :- Q = [wer,sind,die,eltern,von,emma], writeln(Q), question(Q,[]).
+processInput(['ex6']) :- Q = [wer,ist,eine,schwester], writeln(Q), question(Q,[]).
 
-processInput(['ex6']) :- Q = [ist,heinrich,die,_,von,_], writeln(Q), question(Q,[]).
-processInput(['ex7']) :- Q = [sind,die,mutter,von|_], writeln(Q), question(Q,[]).
+processInput(['ex7']) :- Q = [ist,heinrich,die,_,von,_], writeln(Q), question(Q,[]).
+processInput(['ex8']) :- Q = [sind,die,mutter,von|_], writeln(Q), question(Q,[]).
 
 processInput(Q) :- question(Q,[]).
 
@@ -27,6 +28,7 @@ wer ist der onkel von emma? ~ question([wer,ist,der,onkel,von,emma],[]).
 wer ist ein sohn von mary? ~ question([wer,ist,der,sohn,von,mary],[]).
 ist der onkel von emma der sohn von mary? ~ question([ist,der,onkel,von,emma,der,sohn,von,mary],[]).
 wer sind die eltern von emma? ~ question([wer,sind,die,eltern,von,emma],[]).
+wer ist eine schwester? ~ question([wer,ist,eine,schwester],[]).
 */
 
 /* Negativbeispiele
@@ -40,7 +42,7 @@ trim(Q,In) :- append(Q,['.'],In).
 trim(Q,In) :- append(Q,['?'],In).
 trim(Q,In) :- append(Q,['!'],In).
 
-% Uncomment this line to disable verbose
+% Comment this line to enable verbose
 verbose(_) :- !.    % Notiz *1
 verbose(X) :- writeln(X).
 
@@ -50,6 +52,7 @@ question --> closed_q.
 
 % wer ist der onkel von emma?
 % wer sind die eltern von emma?
+% wer ist eine schwester?
 open_q -->
 		    ip(N,G),
 		    v(N,G),
@@ -60,7 +63,6 @@ open_q -->
 			    Ques,
 			    write('Es ist '), writeln(Wer)
 		    }.
-% open_q --> { writeln('Niemand :(') }.
 
 % ist heinrich der onkel von emma?
 closed_q -->
@@ -88,14 +90,15 @@ closed_q -->
 		        Q2,
     		    writeln('Ja :)')
 		    }.
-% closed_q --> { writeln('Nein :(') }.
-
-rel(N,G, [Rel, Name]) --> det(N,G), n(N,G, Rel), pp(Name).
 
 np(N,G,Name) --> name(N,G, Name).
 np(N,G,Rel) --> rel(N,G, Rel).
 
-pp(Name) --> prep, np(_,_,Name).
+rel(N,G, [Rel, Name]) --> det(N,G), n(N,G, Rel), pp(Name), !.   % Cut, weil sich die beiden Faelle ausschliessen
+rel(N,G,[Rel, _]) --> det(N,G), n(N,G,Rel).
+
+
+pp(Name) --> prep, np(_,_,Name). % pp(Name) --> prep, name(Name).
 
 vp --> v.
 vp --> v, np.
@@ -104,14 +107,14 @@ det(N,G) --> det_b(N,G).
 det(N,G) --> det_u(N,G).
 
 % Lexikazugriff
-ip(N,G) --> 	 [X], {lex(X,_,ip,  	N,G)}.
-is_w(N,G) -->  [X], {lex(X,_,is_w,	N,G)}.
-n(N,G, Sem)  --> 	 [X], {lex(X,Sem,n,N,G)}.
-v(N,G)  --> 	 [X], {lex(X,_,v,   	N,G)}.
-prep    --> 	 [X], {lex(X,_,prep,	_,_)}.
-name(N,G, Sem)  --> [X], {lex(X,Sem,name,  N,G)}.
-det_b(N,G) --> [X], {lex(X,_,det_b, N,G)}.
-det_u(N,G) --> [X], {lex(X,_,det_u, N,G)}.
+ip(N,G)         --> [X],    {lex(X,_,   ip,  	N,G)}.
+is_w(N,G)       --> [X],    {lex(X,_,   is_w,	N,G)}.
+n(N,G, Sem)     --> [X],    {lex(X,Sem, n,      N,G)}.
+v(N,G)          --> [X],    {lex(X,_,   v,   	N,G)}.
+prep            --> [X],    {lex(X,_,   prep,	_,_)}.
+name(N,G,Sem)   --> [X],    {lex(X,Sem, name,   N,G)}.
+det_b(N,G)      --> [X],    {lex(X,_,   det_b,  N,G)}.
+det_u(N,G)      --> [X],    {lex(X,_,   det_u,  N,G)}.
 
 
 % *1: Das cut verhindert, dass beim Backtraking einer falschen Aussage nicht die verbose/1 auch gebacktrakt wird.

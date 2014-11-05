@@ -2,10 +2,10 @@
 
 bob|-----------|mary      	hans|-------------|sabine            elvira
      |       |                    |         |                      |
-  heinrich  judy|--------------|klaus     foxie|-----|horst|-----|agne|----|kai (test-tube-baby)
+  heinrich  judy|--------------|klaus     foxie|-----|horst|-----|agne|----|(test-tube-baby)
                   |          |                    |           |
                 emma       jeremie              dieter      hubert|---------|kloeten
-                                        															 |
+                                        							   |
                                                                      loeten
 						   
 **/
@@ -20,7 +20,6 @@ male(dieter).
 male(hubert).
 male(kloeten).
 male(loeten).
-male(kai).
 
 female(mary).
 female(judy).
@@ -42,10 +41,8 @@ parent(sabine,foxie).
 
 parent(judy,emma).
 parent(judy,jeremie).
-parent(judy,kai).
 parent(klaus,emma).
 parent(klaus,jeremie).
-parent(klaus,kai).
 
 parent(foxie,dieter).
 parent(horst,dieter).
