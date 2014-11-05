@@ -37,7 +37,7 @@ question([sind,die,mutter,von|_],[]). % Falscher Numerus wird erkannt.
 
 */
 
-% Entfernt das ? . oder ! am ende
+% Entfernt das ? . oder ! am endeRel
 trim(Q,In) :- append(Q,['.'],In).
 trim(Q,In) :- append(Q,['?'],In).
 trim(Q,In) :- append(Q,['!'],In).
@@ -53,22 +53,24 @@ question --> closed_q.
 % wer ist der onkel von emma?
 % wer sind die eltern von emma?
 % wer ist eine schwester?
+% Ergänzungsfrage
 open_q -->
 		    ip(N,G),
 		    v(N,G),
-		    rel(N,G, [Rel, Name2]),
+		      →(N,G, [Rel, Name2]),
 		    {
 			    Ques =.. [Rel, Wer, Name2],
 			    verbose(Ques),
 			    Ques,
-			    write('Es ist '), writeln(Wer)
+			    write('Von '), write(Name2), write(' ist es '), writel(Wer)
 		    }.
 
 % ist heinrich der onkel von emma?
+% Entscheidungsfrage
 closed_q -->
 		    is_w(N,G),
 		    np(N,G,Name1),
-		    rel(N,G, [Rel, Name2]),
+		      →(N,G, [Rel, Name2]),
 		    {
 		        Ques =.. [Rel, Name1, Name2],
     		    verbose(Ques),
@@ -80,7 +82,7 @@ closed_q -->
 closed_q -->
 		    is_w(N,G),
 		    np(N,G,[Rel1, Name1]),
-		    rel(N,G, [Rel2, Name2]),
+                  →(N,G, [Rel2, Name2]),
 		    {
 		        Q1 =.. [Rel1, X, Name1],
 		        Q2 =.. [Rel2, X, Name2],
@@ -92,10 +94,10 @@ closed_q -->
 		    }.
 
 np(N,G,Name) --> name(N,G, Name).
-np(N,G,Rel) --> rel(N,G, Rel).
+np(N,G,Rel) --> →(N,G, Rel).
 
-rel(N,G, [Rel, Name]) --> det(N,G), n(N,G, Rel), pp(Name), !.   % Cut, weil sich die beiden Faelle ausschliessen
-rel(N,G,[Rel, _]) --> det(N,G), n(N,G,Rel).
+→(N,G, [Rel, Name]) --> det(N,G), n(N,G, Rel), pp(Name), !.   % Cut, weil sich die beiden Faelle ausschliessen
+→(N,G,[Rel, _]) --> det(N,G), n(N,G,Rel).
 
 
 pp(Name) --> prep, np(_,_,Name). % pp(Name) --> prep, name(Name).

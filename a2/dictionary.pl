@@ -1,7 +1,7 @@
 
 % lex(word, semantics, type, numerus, sex)
 
-lex(wer, 			newvar, ip, _, _).
+lex(wer, 			_, ip, _, _).
 
 lex(ist, 			_, is_w, s, _).
 
