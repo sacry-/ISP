@@ -7,9 +7,9 @@
 :- consult('Suche_Modul_Informierte_Suche.pl').
 
 
+:- consult('blocks.pl').
 
-%%% Spezieller Teil: Wassergef‰ﬂe
-:- consult('Suche_Modul_Wasser.pl').
+% :- consult('water.pl').
 
 
 

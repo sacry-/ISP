@@ -12,7 +12,7 @@ start_description([
   block(block1),
   block(block2),
   block(block3),
- block(block4),  %mit Block4
+  block(block4),  %mit Block4
   on(table,block2),
   on(table,block3),
   on(block2,block1),
@@ -32,7 +32,7 @@ goal_description([
   on(table,block3),
   on(table,block1),
   on(block1,block4), %mit Block4
-  on(block1,block2), %ohne Block4
+%  on(block1,block2), %ohne Block4
   clear(block3),
   clear(block2),
   handempty
@@ -42,11 +42,10 @@ goal_description([
 
 start_node((start,_,_)).
 
-goal_node((_,State,_)) :- goal_description(G), equal_as_set(State, G).
-%  "Zielbedingungen einlesen"
-%  "Zustand gegen Zielbedingungen testen".
+goal_node((_,State,_)):-
+  "Zielbedingungen einlesen"
+  "Zustand gegen Zielbedingungen testen".
 
-equal_as_set(R, X) :- mysubset(R, X), mysubset(X, R).
 
 
 % Aufgrund der Komplexität der Zustandsbeschreibungen kann state_member nicht auf 
@@ -54,18 +53,18 @@ equal_as_set(R, X) :- mysubset(R, X), mysubset(X, R).
 %  
 state_member(_,[]):- !,fail.
 
-state_member(State,[FirstState|_]).
-%  "Test, ob State bereits durch FirstState beschrieben war. Tipp: Eine 
-%  Lösungsmöglichkeit besteht in der Verwendung einer Mengenoperation, z.B. subtract"  ,!.  
+state_member(State,[FirstState|_]):-
+  "Test, ob State bereits durch FirstState beschrieben war. Tipp: Eine 
+  Lösungsmöglichkeit besteht in der Verwendung einer Mengenoperation, z.B. subtract"  ,!.  
 
 %Es ist sichergestellt, dass die beiden ersten Klauseln nicht zutreffen.
-state_member(State,[_|RestStates]).
-%  "rekursiver Aufruf".
+state_member(State,[_|RestStates]):-  
+  "rekursiver Aufruf".
 
 
-eval_path([(_,State,Value)|RestPath]).
-%  eval_state(State,"Rest des Literals bzw. der Klausel"
-%  "Value berechnen".
+eval_path([(_,State,Value)|RestPath]):-
+  eval_state(State,"Rest des Literals bzw. der Klausel"
+  "Value berechnen".
 
   
 
@@ -99,14 +98,16 @@ mysubset([H|T],List):-
   mysubset(T,List).
 
 
-expand_help(State,Name,NewState).
-%  "Action suchen"
-%  "Conditions testen"
-%  "Del-List umsetzen"
-%  "Add-List umsetzen".
+expand_help(State,Name,NewState):-
+  "Action suchen"
+  "Conditions testen"
+  "Del-List umsetzen"
+  "Add-List umsetzen".
   
 expand((_,State,_),Result):-
   findall((Name,NewState,_),expand_help(State,Name,NewState),Result).
+
+
 
 
 
