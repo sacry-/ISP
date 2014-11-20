@@ -62,7 +62,7 @@ open_q -->
 			    Ques =.. [Rel, Wer, Name2],
 			    verbose(Ques),
 			    Ques,
-			    write('Von '), write(Name2), write(' ist es '), writel(Wer)
+			    write('Von '), write(Name2), write(' ist es '), writeln(Wer)
 		    }.
 
 % ist heinrich der onkel von emma?
