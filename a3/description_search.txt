@@ -1,0 +1,148 @@
+% Top Level, Seite 1/2
+
+% Jeder Knoten des Suchbaums besteht aus einem Tripel (<Aktion>,<Zustandsbeschreibung>,<Wert>)
+% <Aktion>: Der Name der Aktion, die zum betreffenden Zustand geführt hat
+% <Zustandsbeschreibung>: Sehr anwendungsabhängig
+% <Wert>: Wird nur für die informierte Suche benötigt
+%
+% Der Suchbaum ist gar nicht als Baum repräsentiert, sondern als Liste von Pfaden, wobei ein 
+% Pfad eine Liste von Knoten ist. Diese ineffiziente Repräsentation führt dazu, dass viele 
+% Knoten redundant in mehreren Pfaden auftreten. So ist der Startknoten sogar in jedem Pfad 
+% enthalten (und zwar am Ende, da die Pfade immer am Anfang erweitert werden).
+
+% Das Programm wird mit solve(depth), solve(breadth) oder solve(informed) aufgerufen.
+% start_description liefert den Startknoten und wird anwendungsabhängig definiert. 
+% Es gibt keine Aktion, die zum Startknoten führt. Deshalb steht hier nur „start“.
+%
+solve(Strategy):-
+  start_description(StartState),
+  solve((start,StartState,_),Strategy).
+    
+% start_node prüft, ob ein legaler Startknoten vorliegt.
+% Prädikat search: 
+%   1. Argument ist die Liste aller Pfade. Der aktuelle Pfad ist an erster Stelle. 
+%   Jeder Pfad ist als Liste von Zuständen repräsentiert, allerdings in umgekehrter 
+%   Reihenfolge, d.h. der Startzustand ist an letzter Position.
+%   2. Argument ist die Strategie
+%   3. Argument ist der Ergebnis-Pfad, also der Pfad, der zum Ziel führt.
+%
+solve(StartNode,Strategy) :-
+  start_node(StartNode),
+  search([[StartNode]],Strategy,Path),
+  reverse(Path,Path_in_correct_order),    % reverse: in Prolog vordefiniert
+  write_solution(Path_in_correct_order).
+
+
+
+
+
+% Top Level, Seite 2/2
+
+ 
+% Ausgabe des Ergebnis-Pfads, pro Aktion eine Zeile 
+%
+write_solution(Path):-
+  nl,write('SOLUTION:'),nl,
+  write_actions(Path).  
+
+write_actions([]).
+
+write_actions([(Action,_,_)|Rest]):-
+  write('Action: '),write(Action),nl,
+  write_actions(Rest).
+
+
+% Abbruchbedingung: Wenn ein Zielzustand erreicht ist, wird der aktuelle Pfad an den
+% dritten Parameter übertragen.
+%
+search([[FirstNode|Predecessors]|_],_,[FirstNode|Predecessors]) :- 
+  goal_node(FirstNode),
+  nl,write('SUCCESS'),nl,!.
+
+% expand: FirstNode wird übergeben, Children werden berechnet
+% generate_new_paths: Für jedes Kind wird ein neuer Pfad erzeugt, indem das Kind vorn an den 
+%    bisherigen Pfad angefügt wird. Der bisherige Pfad wird (umständlich) durch 
+%    [FirstNode|Predecessors] beschrieben.
+% insert_new_paths sortiert die NewPaths entsprechend der Strategie in die bereits sortierten 
+%    RestPaths ein. Allpaths ist dann die Gesamtliste aller sortierten Pfade.
+%
+search([[FirstNode|Predecessors]|RestPaths],Strategy,Solution) :- 
+  expand(FirstNode,Children),                                     % Nachfolge-Zustände berechnen
+  generate_new_paths(Children,[FirstNode|Predecessors],NewPaths), % Nachfolge-Zustände einbauen 
+  insert_new_paths(Strategy,NewPaths,RestPaths,AllPaths),         % Neue Pfade einsortieren
+  search(AllPaths,Strategy,Solution).
+
+% Pfade erweitern, Seite 1/1
+
+% generate_new_paths: Children und Path sind Eingabe-Parameter, NewPaths ist Ausgabe-Parameter.
+% Für jedes Kind wird ein neuer Pfad erzeugt, indem das Kind vorn an den bisherigen Pfad angefügt wird. 
+% maplist wendet get_state auf jeden Knoten aus Path an. Dabei wird dem Knoten die Zustandsbeschreibung
+% entnommen. Die Liste der Zustandsbeschreibungen steht dann in States. Die Zustandsbeschreibungen
+% werden gebraucht, um später einen Zyklus-Test durchführen zu können. 
+%
+generate_new_paths(Children,Path,NewPaths):-
+  maplist(get_state,Path,States),                         % maplist ist Prolog-Standard
+  generate_new_paths_help(Children,Path,States,NewPaths).
+
+% Abbruchbedingung, wenn alle Kindzustände abgearbeitet sind.
+generate_new_paths_help([],_,_,[]).
+
+% Falls der Kindzustand bereits im Pfad vorhanden war, wird kein neuer Pfad erzeugt,
+% denn er würde nur in einem Zyklus enden. Es wird nicht überprüft, ob der Kindzustand in einem
+% anderen Pfad vorkommt. Dies wäre auch unbedenklich.
+% state_member muss anwendungsspezifisch definiert werden, weil das vordefinierte member nur für 
+% einfache Strukturen funktioniert.
+%
+generate_new_paths_help([FirstChild|RestChildren],Path,States,RestNewPaths):- 
+  get_state(FirstChild,State), state_member(State,States), !,
+  generate_new_paths_help(RestChildren,Path,States,RestNewPaths).
+
+% Ansonsten, also falls der Kindzustand noch nicht im Pfad vorhanden war, wird er als 
+% Nachfolge-Zustand eingebaut und es wird ein neuer Pfad hinzugefügt. Dieser konstruktive
+% Schritt erfolgt also im Klausel-Kopf als Konstruktion des vierten Parameters.
+% Im Klausel-Rumpf steht lediglich der rekursive Aufruf für die restlichen Kindknoten.
+% Diese Klausel benötigt keinen Test, weil sie in der Reihenfolge zuletzt kommt. 
+% Zusammen mit der vorigen Klausel ergibt sich somit eine IF-THEN-ELSE-Struktur.
+%
+generate_new_paths_help([FirstChild|RestChildren],Path,States,[[FirstChild|Path]|RestNewPaths]):- 
+  generate_new_paths_help(RestChildren,Path,States,RestNewPaths).
+
+% Entnimmt einem Knoten die Zustandsbeschreibung (State) 
+get_state((_,State,_),State).
+%%% Suchstrategie, Seite 1/1
+% Die Schreibanweisungen müssen NICHT verstanden werden.
+
+write_action([[(Action,_)|_]|_]):- nl,write('Action: '),write(Action),nl.
+
+write_next_state([[_,(_,State)|_]|_]):- nl,write('Go on with: '),write(State),nl.
+
+write_state([[(_,State)|_]|_]):- write('New State: '),write(State),nl.
+
+write_fail(depth,[[(_,State)|_]|_]):- nl,write('FAIL, go on with: '),write(State),nl.
+
+write_fail(_,_):-  nl,write('FAIL').
+
+% insert_new_paths sortiert die NewPaths entsprechend der Strategie in die bereits sortierten 
+%    OldPaths ein. Allpaths ist dann die Gesamtliste aller sortierten Pfade.
+
+% Alle Strategien: Keine neuen Pfade vorhanden
+insert_new_paths(Strategy,[],OldPaths,OldPaths):-
+  write_fail(Strategy,OldPaths),!.
+
+% Tiefensuche
+insert_new_paths(depth,NewPaths,OldPaths,AllPaths):-
+  append(NewPaths,OldPaths,AllPaths),
+  write_action(NewPaths).
+
+% Breitensuche
+insert_new_paths(breadth,NewPaths,OldPaths,AllPaths):-
+  append(OldPaths,NewPaths,AllPaths),
+  write_next_state(AllPaths),
+  write_action(AllPaths).
+
+% Informierte Suche
+insert_new_paths(informed,NewPaths,OldPaths,AllPaths):-
+  eval_paths(NewPaths),                                  % Trägt Bewertung in den Kopfknoten jedes Pfades ein.
+  insert_new_paths_informed(NewPaths,OldPaths,AllPaths), % Sortiert die NewPaths entsprechend der Bewertung ein.
+  write_action(AllPaths),
+  write_state(AllPaths).
