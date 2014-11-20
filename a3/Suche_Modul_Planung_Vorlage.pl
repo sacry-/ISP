@@ -12,14 +12,14 @@ start_description([
   block(block1),
   block(block2),
   block(block3),
-  block(block4),  %mit Block4
+% block(block4),  %mit Block4
   on(table,block2),
   on(table,block3),
   on(block2,block1),
-  on(table,block4), %mit Block4
+%  on(table,block4), %mit Block4
   clear(block1),
   clear(block3),
-  clear(block4), %mit Block4
+%  clear(block4), %mit Block4
   handempty
   ]).
 
@@ -27,12 +27,12 @@ goal_description([
   block(block1),
   block(block2),
   block(block3),
-  block(block4), %mit Block4
-  on(block4,block2), %mit Block4
+%  block(block4), %mit Block4
+%  on(block4,block2), %mit Block4
   on(table,block3),
   on(table,block1),
-  on(block1,block4), %mit Block4
-%  on(block1,block2), %ohne Block4
+%  on(block1,block4), %mit Block4
+  on(block1,block2), %ohne Block4
   clear(block3),
   clear(block2),
   handempty
@@ -42,10 +42,13 @@ goal_description([
 
 start_node((start,_,_)).
 
-goal_node((_,State,_)):-
+goal_node((_,State,_)) :- goal_description(G), equal_as_set(State, G).
   "Zielbedingungen einlesen"
   "Zustand gegen Zielbedingungen testen".
 
+equal_as_set([],[]).
+equal_as_set(R1, [F|R2]) :- member(F,R1), equal_as_set(R1, R2).
+equal_as_set([F|R], R2) :- member(F,R2), equal_as_set(R, R2).
 
 
 % Aufgrund der Komplexität der Zustandsbeschreibungen kann state_member nicht auf 
