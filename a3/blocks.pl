@@ -1,5 +1,4 @@
 
-
 start_description([
   block(block1),
   block(block2),
@@ -9,8 +8,7 @@ start_description([
   on(block2,block1),
   clear(block1),
   clear(block3),
-/* on(table,block4),block(block4),clear(block4),    % mit block4
-*/
+%  on(table,block4),block(block4),clear(block4),    % mit block4
   handempty
   ]).
 
@@ -22,8 +20,7 @@ goal_description([
   on(table,block3),
   on(table,block1),
   on(block1,block2), %ohne Block4
-/* block(block4),on(block4,block2),on(block4,block2), % mit block4
-*/
+%  block(block4),on(block1,block4),on(block4,block2), % mit block4
   clear(block3),
   clear(block2),
   handempty
@@ -74,133 +71,65 @@ state_member(State,[_|RestStates]) :- state_member(State, RestStates).
 % needs single Var and multi Var-variant
 expand_help(State, Action, NewState) :-
   action(Action, Conds, Dels, Adds),    % "Action suchen"
+  %verbose('Trying Action'+Action),
   satisfies(State, Conds),              % "Conditions testen"
   subtract(State,Dels,State2),          % "Del-List umsetzen"
   append(State2,Adds,NewState),         % "Add-List umsetzen"
-  verbose('Found Action & State: '), verbose(State -> Action -> NewState).
+  verbose('Found Action & State: ' + (State -> Action -> NewState)).
 
 % satisfies works by putting each of the facts of the state
-% into the database checking the condition and retracting the changes to the database.
-% ignore is used to succeed regardles of the false coming from the database changes.
+% into the database checking the condition. The changes are no immediately retracted,
+% because multiple Conds might match this State (f.e. pcik_up(block1) and pick_up(block2)).
+% therefore the database is left intact and only reset before the next try.
 satisfies(State, Conds) :-
+    unassert_all,   % reset database before copying state
     assert_each(State),
-    verbose('Testing Predicates'+Conds),
-    all_hold(Conds),
-    verbose('Solution'+Conds),
-    unassert_each(State).
+    %verbose('Testing Predicates'+Conds),
+    all_hold(Conds).
+%    verbose('Solution'+Conds).
 
-satisfies(State,_) :-
-    unassert_each(State),
-    % verbose('Failed conditions on State: '), verbose(State),
-    false. % condition failed. reset database and fail
+unassert_all :-
+    retractall( on(_,_)    ),
+    retractall( block(_)   ),
+    retractall( clear(_)   ),
+    retractall( handempty  ),
+    retractall( holding(_) ).
 
 all_hold([]).
 all_hold([C|Conds]) :-
-    verbose('Testing Predicate: ' + C),
+    %verbose('Testing Predicate: ' + C),
     C,
-    verbose('Suceeded '+C),
+    %verbose('Suceeded '+C),
     all_hold(Conds).
 
-% adds a fail for holding such that it doesn't throw predicate-not-found exception. assertz ads at the end.
-no_holding :- assertz( ':-'(holding(_),false) ).
-no_handempty :- assertz( ':-'(handempty,false) ).
-% ':-'(holding(_),(fail)) = holding(_) :- fail.
 
 % database manipulations. http://www.swi-prolog.org/pldoc/doc_for?object=asserta/2
 % Notiz *1
-assert_each(XS) :- assert_help(XS), no_holding, no_handempty.
-assert_help([]).
-assert_help([X|XS]) :- asserta(X), assert_help(XS).
-unassert_each([]).
+assert_each([X|XS]) :- asserta(X), assert_each(XS).
+assert_each([]).
 unassert_each([X|XS]) :- ignore(retract(X)), unassert_each(XS).
+unassert_each([]).
 
 expand((_,State,_),Result):-
   findall((Name,NewState,_),expand_help(State,Name,NewState),Result).
 
-% verbose(_) :- !. % comment to enable verbose
-verbose(X) :- writeln(X).
 
 eval_path([(_,_State,_Value)|_RestPath]):-
-  writeln('TODO: eval_path'), halt.
+  writeln('TODO: eval_path'), !,fail.
 %eval_state(State,"Rest des Literals bzw. der Klausel"
 %"Value berechnen".
 
-% =========================== FEHLER
-% es werde nicht alle pick up aktionen gefunden
-% G = [block(block1),block(block2),block(block3),on(table,block2),on(table,block3),clear(block3),clear(block2),handempty,clear(block1),on(table,block1)],
-% expand((_,G,_),R).
 
-get_name((N,_,_), N). 
-
-% *1:
-/*
-?- assert_each([a,b]).
-false.
-?- a.
-true.
-?- b.
-true.
-?- unassert_each([a,b]).
-false.
-?- a.
-false.
-?- b.
-false.
-*/
-
-
+verbose(_) :- !. % comment to enable verbose
+verbose(X) :- verbose_help(X),nl,!.
+verbose_help(X+Y) :- verbose_help(X), verbose_help(Y).
+verbose_help(X) :- write(X).
 
 
 % *2:
 /*
 ?- goal_description(G),expand_help(G,A,_).
-Testing Predicate: 
-handempty
-Testing Predicate: 
-clear(_G1536)
-Testing Predicate: 
-on(table,block2)
-Testing Predicate: 
-on(table,block3)
-Action found: 
-pick_up(block3)
-G = [block(block1), block(block2), block(block3), on(table, block3), on(table, block1), on(block1, block2), clear(block3), clear(block2), handempty],
-A = pick_up(block3) ;
-Testing Predicate: 
-handempty
-Testing Predicate: 
-clear(_G1536)
-Testing Predicate: 
-on(_G1549,block2)
-Testing Predicate: 
-block(block1)
-Action found: 
-pick_up(block2)
-G = [block(block1), block(block2), block(block3), on(table, block3), on(table, block1), on(block1, block2), clear(block3), clear(block2), handempty],
-A = pick_up(block2) ;
-Testing Predicate: 
-holding(_G1536)
-Testing Predicate: 
-holding(_G1537)
-false.
-
 ?- G = [block(block1),clear(block1),holding(block2),block(block2),on(table,block1)], expand_help(G,_,_).
-Testing Predicate: 
-handempty
-Testing Predicate: 
-handempty
-Testing Predicate: 
-holding(_G1541)
-Action found: 
-put_on_table(block2)
-G = [block(block1), clear(block1), holding(block2), block(block2), on(table, block1)] ;
-Testing Predicate: 
-holding(_G1542)
-Testing Predicate: 
-clear(_G1541)
-Action found: 
-put_on(block1,block2)
-G = [block(block1), clear(block1), holding(block2), block(block2), on(table, block1)].
+?- G = [block(block1),block(block2),block(block3),on(table,block2),on(table,block3),clear(block3),clear(block2),handempty,clear(block1),on(table,block1)], expand((_,G,_),R).
 */
-
 
