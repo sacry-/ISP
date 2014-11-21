@@ -1,0 +1,99 @@
+
+
+OHNE BLOCK 4 TIEFENSUCHE
+?-  time(solve(depth)).
+...
+SUCCESS
+
+SOLUTION:
+Action: start
+Action: pick_up(block1)
+Action: put_on_table(block1)
+Action: pick_up(block2)
+Action: put_on(block1,block2)
+% 4,445 inferences, 0.003 CPU in 0.003 seconds (100% CPU, 1646718 Lips)
+true.
+
+
+OHNE BLOCK 4 BREITENSUCHE
+?-  time(solve(breadth)).
+...
+SUCCESS
+
+SOLUTION:
+Action: start
+Action: pick_up(block1)
+Action: put_on_table(block1)
+Action: pick_up(block2)
+Action: put_on(block1,block2)
+% 6,948 inferences, 0.006 CPU in 0.006 seconds (100% CPU, 1150726 Lips)
+true.
+
+==============================================================================================
+
+MIT BLOCK 4 TIEFENSUCHE
+?- time(solve(depth)).
+SUCCESS
+
+SOLUTION:
+Action: start
+Action: pick_up(block4)
+Action: put_on(block3,block4)
+Action: pick_up(block1)
+Action: put_on_table(block1)
+Action: pick_up(block2)
+Action: put_on(block1,block2)
+Action: pick_up(block4)
+Action: put_on_table(block4)
+Action: pick_up(block3)
+Action: put_on(block4,block3)
+Action: pick_up(block2)
+Action: put_on_table(block2)
+Action: pick_up(block3)
+Action: put_on_table(block3)
+Action: pick_up(block4)
+Action: put_on(block2,block4)
+Action: pick_up(block3)
+Action: put_on(block1,block3)
+Action: pick_up(block4)
+Action: put_on_table(block4)
+Action: pick_up(block2)
+Action: put_on(block4,block2)
+Action: pick_up(block3)
+Action: put_on_table(block3)
+Action: pick_up(block1)
+Action: put_on(block3,block1)
+Action: pick_up(block2)
+Action: put_on_table(block2)
+Action: pick_up(block1)
+Action: put_on(block4,block1)
+Action: pick_up(block3)
+Action: put_on(block2,block3)
+Action: pick_up(block1)
+Action: put_on_table(block1)
+Action: pick_up(block4)
+Action: put_on(block1,block4)
+Action: pick_up(block3)
+Action: put_on_table(block3)
+Action: pick_up(block2)
+Action: put_on(block4,block2)
+% 286,177 inferences, 0.052 CPU in 0.053 seconds (98% CPU, 5484863 Lips)
+true.
+
+
+MIt BLOCK 4 BREITENSUCHE.
+
+?- time(solve(breadth)).
+...
+SUCCESS
+
+SOLUTION:
+Action: start
+Action: pick_up(block1)
+Action: put_on_table(block1)
+Action: pick_up(block4)
+Action: put_on(block1,block4)
+Action: pick_up(block2)
+Action: put_on(block4,block2)
+% 163,839 inferences, 0.030 CPU in 0.031 seconds (95% CPU, 5477737 Lips)
+true.
