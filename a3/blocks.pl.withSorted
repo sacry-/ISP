@@ -1,41 +1,16 @@
 
 
-start_description([
-  block(block1),
-  block(block2),
-  block(block3),
-  on(table,block2),
-  on(table,block3),
-  on(block2,block1),
-  clear(block1),
-  clear(block3),
-/* on(table,block4),block(block4),clear(block4),    % mit block4
-*/
-  handempty
-  ]).
+start_description([handempty,block(block1),block(block2),block(block3),clear(block1),clear(block3),on(block2,block1),on(table,block2),on(table,block3)]).
+% on(table,block4),block(block4),clear(block4),    % mit block4
 
-
-goal_description([
-  block(block1),
-  block(block2),
-  block(block3),
-  on(table,block3),
-  on(table,block1),
-  on(block1,block2), %ohne Block4
-/* block(block4),on(block4,block2),on(block4,block2), % mit block4
-*/
-  clear(block3),
-  clear(block2),
-  handempty
-  ]).
-
-
+goal_description([handempty,block(block1),block(block2),block(block3),clear(block2),clear(block3),on(block1,block2),on(table,block1),on(table,block3)]).
+% block(block4),on(block4,block2),on(block4,block2), % mit block4
 
 start_node((start,_,_)).
 
-goal_node((_,State,_)) :- goal_description(G), state_equal(State, G).
+goal_node((_,State,_)) :- goal_description(State).%, state_equal(State, G).
 
-state_equal(R, X) :- mysubset(R, X), mysubset(X, R).
+% state_equal(R, X) :- mysubset(R, X), mysubset(X, R).
 
 mysubset([],_).
 mysubset([H|T],List):-
@@ -65,9 +40,10 @@ action(put_on(Y,X),
 
 % state_member(State, States). Ist der Zustand State
 % in der Liste der Zustände States enthalten?
-state_member(_,[]):- !, fail.
-state_member(State,[FirstState|_]) :- state_equal(State, FirstState).
-state_member(State,[_|RestStates]) :- state_member(State, RestStates).
+state_member(State, States) :- member(State, States).
+%state_member(_,[]):- !, fail.
+%state_member(State,[FirstState|_]) :- state_equal(State, FirstState).
+%state_member(State,[_|RestStates]) :- state_member(State, RestStates).
 
 % expand_help(State, Name, NewState) wird für alle Instanziierungen von Name und NewState
 % wahr, die aus State erreicht werden können.
@@ -76,7 +52,8 @@ expand_help(State, Action, NewState) :-
   action(Action, Conds, Dels, Adds),    % "Action suchen"
   satisfies(State, Conds),              % "Conditions testen"
   subtract(State,Dels,State2),          % "Del-List umsetzen"
-  append(State2,Adds,NewState),         % "Add-List umsetzen"
+  append(State2,Adds,NewStateUnsorted),         % "Add-List umsetzen",
+  sort(NewStateUnsorted, NewState),
   verbose('Found Action & State: '), verbose(State -> Action -> NewState).
 
 % satisfies works by putting each of the facts of the state
@@ -84,9 +61,8 @@ expand_help(State, Action, NewState) :-
 % ignore is used to succeed regardles of the false coming from the database changes.
 satisfies(State, Conds) :-
     assert_each(State),
-    verbose('Testing Predicates'+Conds),
+    % verbose('Testing Predicates'+Conds),
     all_hold(Conds),
-    verbose('Solution'+Conds),
     unassert_each(State).
 
 satisfies(State,_) :-
@@ -96,9 +72,9 @@ satisfies(State,_) :-
 
 all_hold([]).
 all_hold([C|Conds]) :-
-    verbose('Testing Predicate: ' + C),
+    % verbose('Testing Predicate: ' + C),
     C,
-    verbose('Suceeded '+C),
+    % verbose('Suceeded '+C),
     all_hold(Conds).
 
 % adds a fail for holding such that it doesn't throw predicate-not-found exception. assertz ads at the end.
@@ -117,20 +93,13 @@ unassert_each([X|XS]) :- ignore(retract(X)), unassert_each(XS).
 expand((_,State,_),Result):-
   findall((Name,NewState,_),expand_help(State,Name,NewState),Result).
 
-% verbose(_) :- !. % comment to enable verbose
+verbose(_) :- !. % comment to enable verbose
 verbose(X) :- writeln(X).
 
 eval_path([(_,_State,_Value)|_RestPath]):-
   writeln('TODO: eval_path'), halt.
 %eval_state(State,"Rest des Literals bzw. der Klausel"
 %"Value berechnen".
-
-% =========================== FEHLER
-% es werde nicht alle pick up aktionen gefunden
-% G = [block(block1),block(block2),block(block3),on(table,block2),on(table,block3),clear(block3),clear(block2),handempty,clear(block1),on(table,block1)],
-% expand((_,G,_),R).
-
-get_name((N,_,_), N). 
 
 % *1:
 /*
