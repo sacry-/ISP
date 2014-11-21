@@ -8,7 +8,7 @@ start_description([
   on(block2,block1),
   clear(block1),
   clear(block3),
-%  on(table,block4),block(block4),clear(block4),    % mit block4
+  on(table,block4),block(block4),clear(block4),    % mit block4
   handempty
   ]).
 
@@ -19,14 +19,12 @@ goal_description([
   block(block3),
   on(table,block3),
   on(table,block1),
-  on(block1,block2), %ohne Block4
-%  block(block4),on(block1,block4),on(block4,block2), % mit block4
+%  on(block1,block2), %ohne Block4
+  block(block4),on(block1,block4),on(block4,block2), % mit block4
   clear(block3),
   clear(block2),
   handempty
   ]).
-
-
 
 start_node((start,_,_)).
 
@@ -113,11 +111,44 @@ unassert_each([]).
 expand((_,State,_),Result):-
   findall((Name,NewState,_),expand_help(State,Name,NewState),Result).
 
-
-eval_path([(_,_State,_Value)|_RestPath]):-
-  writeln('TODO: eval_path'), !,fail.
+eval_path(Path) :- eval_A(Path).
 %eval_state(State,"Rest des Literals bzw. der Klausel"
 %"Value berechnen".
+
+
+% Bei A gilt: f(n) = g(n) + h(n)
+% Bewertung vom Kindknoten := Kosten bis zum aktuellen Knoten + geschätzte Kosten ab dem Kindknoten.
+
+eval_A(Path) :- Path = [Child|RestPath], eval_A_bisher(RestPath), eval_A_Child(Child).
+
+% eval_A_bisher berechnet die bisherigen Kosten eines Pfades indem die Kosten der vorgängeer inkrementiert werden.
+% Das erste Element des Pfades wird nicht besonders behandelt.
+eval_A_bisher([(start,_,0)]). % Kosten vom Startknoten sind 0.
+eval_A_bisher([(_,_,N),(P,S,M)|RestPath]) :- eval_A_bisher([(P,S,M)|RestPath]), N is M+1. % 
+% Siehe Beispiel: ?- path(_X), eval_A_bisher(_X),_X=[(_,_,Val)|_], writeln(Val).
+
+% soll die Restkosten zum Ende berechnen. % TODO: Restkosten bestimmen.
+eval_A_Child( (_,_,0) ).
+
+% Utility to return all a few paths from the start.
+path(P) :- path_(DefaultPath), tails(DefaultPath, Ts), member(P,Ts), not(P = []).
+path_([
+	(block2,_,_),
+	(put_on(block4),_,_),
+	(pick_up(block2),_,_),
+	(block4,_,_),
+	(put_on(block1),_,_),
+	(pick_up(block4),_,_),
+	(put_on_table(block1),_,_),
+	(pick_up(block1),_,_),
+    (start,_,_)
+]).
+
+
+
+tails([],[[]]) :- !.
+tails(XS, [XS|RSS]) :- XS = [_|RS],!, tails(RS,RSS).
+
 
 
 verbose(_) :- !. % comment to enable verbose
