@@ -20,6 +20,7 @@ solve(StartNode,Strategy) :-
 
 
 write_solution(Path):-
+%  writeln(Path).
   nl,write('SOLUTION:'),nl,
   write_actions(Path).  
 
