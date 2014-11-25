@@ -32,9 +32,7 @@ true.
 ==============================================================================================
 
 MIT BLOCK 4 TIEFENSUCHE
-?- time(solve(depth)).
-SUCCESS
-
+% 286,447 inferences, 0.047 CPU in 0.048 seconds (99% CPU, 6045379 Lips)
 SOLUTION:
 Action: start
 Action: pick_up(block4)
@@ -77,16 +75,12 @@ Action: pick_up(block3)
 Action: put_on_table(block3)
 Action: pick_up(block2)
 Action: put_on(block4,block2)
-% 286,177 inferences, 0.052 CPU in 0.053 seconds (98% CPU, 5484863 Lips)
 true.
 
 
-MIt BLOCK 4 BREITENSUCHE.
+MIt BLOCK 4 BREITENSUCHE
 
-?- time(solve(breadth)).
-...
-SUCCESS
-
+% 164,974 inferences, 0.031 CPU in 0.031 seconds (100% CPU, 5301213 Lips)
 SOLUTION:
 Action: start
 Action: pick_up(block1)
@@ -95,5 +89,74 @@ Action: pick_up(block4)
 Action: put_on(block1,block4)
 Action: pick_up(block2)
 Action: put_on(block4,block2)
-% 163,839 inferences, 0.030 CPU in 0.031 seconds (95% CPU, 5477737 Lips)
 true.
+
+
+MIT BLOCK 4 A ZERO
+
+% 200,894 inferences, 0.036 CPU in 0.036 seconds (99% CPU, 5589858 Lips)
+SOLUTION:
+Action: start
+Action: pick_up(block1)
+Action: put_on_table(block1)
+Action: pick_up(block4)
+Action: put_on(block1,block4)
+Action: pick_up(block2)
+Action: put_on(block4,block2)
+true .
+
+
+MIT BLOCK 4 A COUNT_MISSING
+
+% 50,888 inferences, 0.021 CPU in 0.021 seconds (100% CPU, 2381368 Lips)
+SOLUTION:
+Action: start
+Action: pick_up(block1)
+Action: put_on_table(block1)
+Action: pick_up(block4)
+Action: put_on(block1,block4)
+Action: pick_up(block2)
+Action: put_on(block4,block2)
+true .
+
+
+MIT BLOCK 4 GREEDY ZERO
+
+% 69,130 inferences, 0.013 CPU in 0.013 seconds (100% CPU, 5185522 Lips)
+SOLUTION:
+Action: start
+Action: pick_up(block1)
+Action: put_on(block3,block1)
+Action: pick_up(block4)
+Action: put_on(block2,block4)
+Action: pick_up(block1)
+Action: put_on_table(block1)
+Action: pick_up(block4)
+Action: put_on(block3,block4)
+Action: pick_up(block2)
+Action: put_on(block1,block2)
+Action: pick_up(block4)
+Action: put_on_table(block4)
+Action: pick_up(block2)
+Action: put_on(block3,block2)
+Action: pick_up(block4)
+Action: put_on(block1,block4)
+Action: pick_up(block2)
+Action: put_on(block4,block2)
+true .
+
+
+MIT BLOCK 4 GREEDY COUNT_MISSING
+
+% 11,493 inferences, 0.002 CPU in 0.002 seconds (100% CPU, 4698991 Lips)
+SOLUTION:
+Action: start
+Action: pick_up(block1)
+Action: put_on_table(block1)
+Action: pick_up(block4)
+Action: put_on(block1,block4)
+Action: pick_up(block2)
+Action: put_on(block4,block2)
+true .
+
+
