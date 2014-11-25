@@ -1,13 +1,15 @@
 % Informierte Suche
 
 
-eval_paths([]).
+% =============================== Eval Path wurde um eine Strategie erweitert.
 
-eval_paths([FirstPath|RestPaths]):-
-  eval_path(FirstPath),
-  eval_paths(RestPaths).
+eval_paths(_, []).
 
+eval_paths(Strategy, [FirstPath|RestPaths]):-
+  eval_path(Strategy, FirstPath),
+  eval_paths(Strategy, RestPaths).
 
+% =================================================================================
 
 insert_new_paths_informed([],OldPaths,OldPaths).
 
