@@ -12,22 +12,30 @@ solve(Strategy):-
 %   3. Argument ist der Ergebnis-Pfad.
 %
 solve(StartNode,Strategy) :-
-  start_node(StartNode),
-  search([[StartNode]],Strategy,Path),
+  S = (
+      start_node(StartNode),
+      search([[StartNode]],Strategy,Path)
+    ),
+  time(S),
   reverse(Path,Path_in_correct_order),
   write_solution(Path_in_correct_order).
 
+% auf false/true setzten um auch die Suche anzuzeigen.
+enable_writing(false).
 
+newl :- enable_writing(X), X, !, nl.
+newl.
+write2(X) :- enable_writing(W), W, !, write(X).
+write2(_).
 
 write_solution(Path):-
-%  writeln(Path).
-  nl,write('SOLUTION:'),nl,
+  write2('SOLUTION:'),newl,
   write_actions(Path).  
 
 write_actions([]).
 
 write_actions([(Action,_,_)|Rest]):-
-  write('Action: '),write(Action),nl,
+  write2('Action: '),write2(Action),newl,
   write_actions(Rest).
 
 
@@ -39,7 +47,7 @@ write_actions([(Action,_,_)|Rest]):-
 %
 search([[FirstNode|Predecessors]|_],_,[FirstNode|Predecessors]) :- 
   goal_node(FirstNode),
-  nl,write('SUCCESS'),nl,!.
+  newl,write2('SUCCESS'),newl,!.
 
 
 search([[FirstNode|Predecessors]|RestPaths],Strategy,Solution) :- 
@@ -104,18 +112,18 @@ get_state((_,State,_),State).
 %%% Strategie:
 
 write_action([[(Action,_)|_]|_]):-
-  nl,write('Action: '),write(Action),nl.
+  newl,write2('Action: '),write2(Action),newl.
 
 write_next_state([[_,(_,State)|_]|_]):-
-  nl,write('Go on with: '),write(State),nl.
+  newl,write2('Go on with: '),write2(State),newl.
 
 write_state([[(_,State)|_]|_]):-
-  write('New State: '),write(State),nl.
+  write2('New State: '),write2(State),newl.
 
 write_fail(depth,[[(_,State)|_]|_]):-
-  nl,write('FAIL, go on with: '),write(State),nl.
+  newl,write2('FAIL, go on with: '),write2(State),newl.
 
-write_fail(_,_):-  nl,write('FAIL').
+write_fail(_,_):-  newl,write2('FAIL').
 
 % Alle Strategien: Keine neuen Pfade vorhanden
 insert_new_paths(Strategy,[],OldPaths,OldPaths):-
@@ -132,13 +140,30 @@ insert_new_paths(breadth,NewPaths,OldPaths,AllPaths):-
   write_next_state(AllPaths),
   write_action(AllPaths).
 
-% Informierte Suche
-insert_new_paths(informed,NewPaths,OldPaths,AllPaths):-
-  eval_paths(NewPaths),
+
+% =============================== INFORMIERTE SUCHE ================================
+
+% Informierte Suche mit A
+insert_new_paths(a,NewPaths,OldPaths,AllPaths):-
+  eval_paths(a, NewPaths),
+  insert_new_paths_informed(NewPaths,OldPaths,AllPaths),
+  write_action(AllPaths),
+  write_state(AllPaths).
+  
+  
+% Informierte Suche mit Gierigem Bergsteigen 
+insert_new_paths(greedy_climbing,NewPaths,OldPaths,AllPaths):-
+  eval_paths(greedy_climbing, NewPaths),
   insert_new_paths_informed(NewPaths,OldPaths,AllPaths),
   write_action(AllPaths),
   write_state(AllPaths).
 
+% Informierte Suche mit Optimistischen Bergsteigen (nur direkte Nachfolger werden betrachtet, der mit den geringsten Restkosten wird genommen)
+insert_new_paths(optimistic_climbing,NewPaths,_,SortedNewPaths):-
+  eval_paths(greedy_climbing, NewPaths),
+  insert_new_paths_informed(NewPaths,[],SortedNewPaths),
+  write_action(SortedNewPaths),
+  write_state(SortedNewPaths).
 
 
 
