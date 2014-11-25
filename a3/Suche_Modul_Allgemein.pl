@@ -16,7 +16,7 @@ solve(StartNode,Strategy) :-
       start_node(StartNode),
       search([[StartNode]],Strategy,Path)
     ),
-  time(S),
+  time(S),!,
   reverse(Path,Path_in_correct_order),
   write_solution(Path_in_correct_order).
 
@@ -151,19 +151,28 @@ insert_new_paths(a,NewPaths,OldPaths,AllPaths):-
   write_state(AllPaths).
   
   
-% Informierte Suche mit Gierigem Bergsteigen 
-insert_new_paths(greedy_climbing,NewPaths,OldPaths,AllPaths):-
-  eval_paths(greedy_climbing, NewPaths),
-  insert_new_paths_informed(NewPaths,OldPaths,AllPaths),
+% Informierte Suche mit Optimistischen Bergsteigen (nur direkte Nachfolger werden betrachtet, der mit den geringsten Restkosten wird genommen)
+insert_new_paths(optimist,NewPaths,_,AllPaths):-
+  eval_paths(optimist, NewPaths),
+  insert_new_paths_informed(NewPaths,[],AllPaths),
   write_action(AllPaths),
   write_state(AllPaths).
 
-% Informierte Suche mit Optimistischen Bergsteigen (nur direkte Nachfolger werden betrachtet, der mit den geringsten Restkosten wird genommen)
-insert_new_paths(optimistic_climbing,NewPaths,_,SortedNewPaths):-
-  eval_paths(greedy_climbing, NewPaths),
+% Informierte Suche mit backtracked Hill-Climbing (so wie optimistisches Bergsteigen. jedoch werden auch die alten pfade berücksichtigt)
+insert_new_paths(backclimb,NewPaths,OldPaths,AllPaths):-
+  eval_paths(backclimb, NewPaths),
   insert_new_paths_informed(NewPaths,[],SortedNewPaths),
-  write_action(SortedNewPaths),
-  write_state(SortedNewPaths).
+  append(SortedNewPaths, OldPaths, AllPaths),
+  write_action(AllPaths),
+  write_state(AllPaths).
+
+
+% Informierte Suche mit Gierigem Bergsteigen. So wie A, nur werden die Restkosten ignoriert.
+insert_new_paths(greedy,NewPaths,OldPaths,AllPaths):-
+  eval_paths(greedy, NewPaths),
+  insert_new_paths_informed(NewPaths,OldPaths,AllPaths),
+  write_action(AllPaths),
+  write_state(AllPaths).
 
 
 

@@ -126,16 +126,12 @@ eval(Algorithm, Heuristic, [Child|RestPath]) :-
     eval_state(Algorithm, Heuristic, Child, Bisher).
 
 % Bei A gilt: f(n) = g(n) + h(n)
-% Bewertung vom Kindknoten := Kosten bis zum aktuellen Knoten + geschätzte Kosten ab dem Kindknoten.
-% soll die Restkosten zum Ende berechnen.
-
 eval_state(a, Heuristic, (_,State,Value), Bisher) :-
     heuristic(Heuristic, State, Restkosten),
     Value is Bisher + Restkosten.
 
-eval_state(greedy_climbing, Heuristic, (_,State,Value), _) :-
-    heuristic(Heuristic, State, Value).
-eval_state(optimistic_climbing, Heuristic, (_,State,Value), _) :-
+% Die anderen ignorieren die bisherigen Kosten
+eval_state(_, Heuristic, (_,State,Value), _) :-
     heuristic(Heuristic, State, Value).
 
 % Heuristik 0: Keine Bewertung

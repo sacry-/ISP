@@ -1,4 +1,14 @@
 
+?- member(S,[depth,breadth,a,optimist,backclimb,greedy]), solve(S),fail.
+% 286,608 inferences, 0.047 CPU in 0.048 seconds (98% CPU, 6119612 Lips)
+% 165,367 inferences, 0.023 CPU in 0.023 seconds (100% CPU, 7206085 Lips)
+% 50,997 inferences, 0.009 CPU in 0.008 seconds (100% CPU, 5995515 Lips)
+% 11,453 inferences, 0.002 CPU in 0.002 seconds (100% CPU, 6639070 Lips)
+% 11,475 inferences, 0.002 CPU in 0.002 seconds (100% CPU, 6713349 Lips)
+% 11,493 inferences, 0.002 CPU in 0.002 seconds (100% CPU, 6948609 Lips)
+false.
+
+========================================================================================
 
 OHNE BLOCK 4 TIEFENSUCHE
 ?-  time(solve(depth)).
