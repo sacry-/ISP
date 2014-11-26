@@ -118,7 +118,7 @@ expand((_,State,_),Result):-
 
 
                             % eval(Algorithm, Heuristik, Path).
-eval_path(Algorithm, Path) :- eval(Algorithm, count_missing, Path).
+eval_path(Algorithm, Path) :- eval(Algorithm, count_table, Path).
 
 eval(Algorithm, Heuristic, [Child|RestPath]) :-
     length(RestPath, Bisher),
@@ -142,6 +142,15 @@ heuristic( count_missing, State, H ) :-
     subtract(G, State, Missing),
     length(Missing, H).
 
+% Heuristik 1: Wie viele ziele sind noch zu erfüllen? Mit größerer Gewichtung von on(table,X) Zielen.
+heuristic( count_table,State,Value) :-
+  goal_description(G),
+  subtract(State,G,Missing),
+  IsOnTable = (member(P, Missing), P = (on(table,_))),
+  findall(P, IsOnTable, Ps),
+  length(Ps, TableN),
+  length(Missing, MissingN),
+  Value is (MissingN - TableN) + TableN * 2. % doppelte Wertung der on(table,_) Fakten
 
 % ================================= UTILS =======================================
 
