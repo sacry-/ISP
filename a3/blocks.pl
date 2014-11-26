@@ -30,10 +30,9 @@ goal_description([
 
 start_node((start,_,_)).
 
-goal_node((_,State,_)) :- goal_description(G), state_equal(State, G).
+goal_node((_,State,_)) :- goal_description(G), mysubset(G, State).
 
 state_equal(R, X) :- mysubset(R, X), mysubset(X, R).
-
 
 action(pick_up(X),
        [handempty, clear(X), on(table,X)],
