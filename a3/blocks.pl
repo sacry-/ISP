@@ -118,7 +118,7 @@ expand((_,State,_),Result):-
 
 
                             % eval(Algorithm, Heuristik, Path).
-eval_path(Algorithm, Path) :- eval(Algorithm, count_table, Path).
+eval_path(Algorithm, Path) :- eval(Algorithm, count_missing, Path).
 
 eval(Algorithm, Heuristic, [Child|RestPath]) :-
     length(RestPath, Bisher),

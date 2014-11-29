@@ -18,6 +18,8 @@ solve(StartNode,Strategy) :-
     ),
   time(S),!,
   reverse(Path,Path_in_correct_order),
+  length(Path, Pn),
+  write(' with Length'),writeln(Pn),
   write_solution(Path_in_correct_order).
 
 % auf false/true setzten um auch die Suche anzuzeigen.
@@ -123,7 +125,7 @@ write_state([[(_,State)|_]|_]):-
 write_fail(depth,[[(_,State)|_]|_]):-
   newl,write2('FAIL, go on with: '),write2(State),newl.
 
-write_fail(_,_):-  newl,write2('FAIL').
+write_fail(_,_):-  nl,write('FAIL').
 
 % Alle Strategien: Keine neuen Pfade vorhanden
 insert_new_paths(Strategy,[],OldPaths,OldPaths):-
