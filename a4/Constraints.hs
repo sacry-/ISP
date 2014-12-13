@@ -3,7 +3,7 @@
 module Constraints (
         Net(..), Constraint, Node,
         Domain, NodeName,
-        mkConstraint,
+        mkConstraint, var,
         ac1
     ) where
 
@@ -14,9 +14,15 @@ import Data.Maybe (fromJust)
 import Debug.Trace
 
 -- Ein Knoten besteht aus seinem Namen sowie aus dessen Domainmenge
-type Node a = (String, Domain a)
+data Node a = Node String (Domain a) deriving (Show, Eq)
 type Domain a = [a] -- Die Domain ist vom Typ a
 type NodeName = String
+
+var :: String -> Domain a -> Node a
+var = Node
+
+nodeName :: Node a -> String
+nodeName (Node s _) = s
 
 -- Net a ist ein Constraint Netz dessen Werte Elemente vom Typ a haben können.
 data Net a = Net [Node a] [Constraint a] deriving Show
@@ -41,10 +47,10 @@ mkConstraint :: forall a. Eq a => NodeName -> (a -> a -> Bool) -> NodeName -> St
 mkConstraint s1 f s2 name = Binary name s1 s2 g f
     where
         g :: Node a -> Node a -> (Node a, Bool)
-        g xNode@(x',xs) (y',ys)
+        g xNode@(Node x' xs) (Node y' ys)
                 | x' == s1 && y' == s2 =
                     let xs' = [ x | x <- xs, any (\y -> f x y) ys] -- dies hier ist eine Implementation des REVISE Algorithmus
-                    in ( (x', xs'), xs' /= xs )
+                    in ( Node x' xs', xs' /= xs )
                 | otherwise = (xNode, False)
 
 ac1 :: forall a. (Eq a, Show a) => Net a -> IO (Net a)
@@ -82,8 +88,8 @@ checkSingleConstraint =
             [] -> return False
             (c:cs') ->
                 let (Binary name s1 s2 f _) = c
-                    n1 = fromJust $ find (\n -> fst n == s1) ns
-                    n2 = fromJust $ find (\n -> fst n == s2) ns
+                    n1 = fromJust $ find (\n -> nodeName n == s1) ns
+                    n2 = fromJust $ find (\n -> nodeName n == s2) ns
                     (n1', changed) = f n1 n2
                     ns' = replaceNode n1 n1' ns
                     newnet = Net ns' net_cs
@@ -98,7 +104,7 @@ checkSingleConstraint =
 replaceNode :: Node a -> Node a -> [Node a] -> [Node a]
 replaceNode x y [] = error "Not found in replace" 
 replaceNode x y (b:bs)
-    | fst b == fst x = y:bs
+    | nodeName b == nodeName x = y:bs
     | otherwise = b : replaceNode x y bs
 
 -- flop takes a Constraint and builds its flipped Constraint.

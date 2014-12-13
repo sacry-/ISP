@@ -4,10 +4,10 @@ import Constraints
 net :: Net Int
 net = Net
         [
-            ("V", [1,2,3,4]),
-            ("X", [1,2,3,4]),
-            ("Y", [1,2,3,4]),
-            ("Z", [1,2,3,4])
+            var "V" [1,2,3,4],
+            var "X" [1,2,3,4],
+            var "Y" [1,2,3,4],
+            var "Z" [1,2,3,4]
         ]
         [
             mkConstraint "X" (==) "V"               "X = V",
