@@ -10,6 +10,7 @@ module Constraints (
 import Control.Monad.State.Strict
 import Data.List (find)
 import Data.Maybe (fromJust)
+import Debug.Trace
 
 -- Ein Knoten besteht aus seinem Namen sowie aus dessen Domainmenge
 data Node a = Node String (Domain a) deriving (Show, Eq)
@@ -48,14 +49,15 @@ cName1 (Binary _ s _ _ _) = s
 cName2 :: Constraint a -> String
 cName2 (Binary _ _ s _ _) = s
 
-mkConstraint :: forall a. Eq a => NodeName -> (a -> a -> Bool) -> NodeName -> String -> Constraint a
+mkConstraint :: forall a. (Eq a, Show a) => NodeName -> (a -> a -> Bool) -> NodeName -> String -> Constraint a
 mkConstraint s1 f s2 name = Binary name s1 s2 g f
     where
         g :: Node a -> Node a -> (Node a, Bool)
         g xNode@(Node x' xs) (Node y' ys)
                 | x' == s1 && y' == s2 =
                     let xs' = [ x | x <- xs, any (f x) ys] -- dies hier ist eine Implementation des REVISE Algorithmus
-                    in ( Node x' xs', xs' /= xs )
+                    in -- trace (name ++ " on " ++ show (head xs) ++ " vs " ++ show (head ys) ++ " -> " ++ show (xs' /= xs))
+                      ( Node x' xs', xs' /= xs )
                 | otherwise = (xNode, False)
 
 
@@ -74,13 +76,11 @@ ac3 net@(Net _ cs) = resultNet
         reviser :: Show a => StateT (S a) IO (Net a)
         reviser = do
             (net, cs) <- get
-            lift $ putStr "Iteration: "
-            lift $ print net
-            changes <- replicateM (length cs) reduceSingleConstraint
-            (newnet, _) <- get
-            if True `elem` changes
-                then modify (\(n,_) -> (n,cs)) >> reviser
-                else return newnet
+            -- lift $ putStr "Iteration: "
+            -- lift $ print net
+            if null cs
+                then return net
+                else reduceSingleConstraint >> reviser
 
 
 -- St a is the type used in the stateful computation.
@@ -104,8 +104,10 @@ reduceSingleConstraint =
                     cs' = relevant_neighbours ++ cr
                 in
                     do
+                        --lift (putStrLn $ name ++ ": " ++ show changed ++ ", rn: " ++ show relevant_neighbours)
                         when changed
-                            (lift (putStrLn $ s1 ++ " vs " ++ s2 ++ ": " ++ show n1 ++ " -> " ++ show n1' ++ ", rn: " ++ show relevant_neighbours))
+                            (lift (putStrLn $ s1 ++ " vs " ++ s2 ++ ": " ++ show n1 ++ " -> " ++ show n1' ++ ", remaining: " ++  (show $ length cs') ))
+                        -- lift getLine
                         put (newnet, cs')
                         return changed
 
