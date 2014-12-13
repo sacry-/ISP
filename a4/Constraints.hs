@@ -4,14 +4,12 @@ module Constraints (
         Net(..), Constraint, Node,
         Domain, NodeName,
         mkConstraint, var,
-        ac1
+        ac3, solve
     ) where
 
 import Control.Monad.State.Strict
-import Control.Monad (replicateM)
 import Data.List (find)
 import Data.Maybe (fromJust)
-import Debug.Trace
 
 -- Ein Knoten besteht aus seinem Namen sowie aus dessen Domainmenge
 data Node a = Node String (Domain a) deriving (Show, Eq)
@@ -43,62 +41,76 @@ data Constraint a =
 instance Show (Constraint a) where
     show (Binary s _ _ _ _) = "Binary " ++ s
 
+
+cName1 :: Constraint a -> String
+cName1 (Binary _ s _ _ _) = s
+
+cName2 :: Constraint a -> String
+cName2 (Binary _ _ s _ _) = s
+
 mkConstraint :: forall a. Eq a => NodeName -> (a -> a -> Bool) -> NodeName -> String -> Constraint a
 mkConstraint s1 f s2 name = Binary name s1 s2 g f
     where
         g :: Node a -> Node a -> (Node a, Bool)
         g xNode@(Node x' xs) (Node y' ys)
                 | x' == s1 && y' == s2 =
-                    let xs' = [ x | x <- xs, any (\y -> f x y) ys] -- dies hier ist eine Implementation des REVISE Algorithmus
+                    let xs' = [ x | x <- xs, any (f x) ys] -- dies hier ist eine Implementation des REVISE Algorithmus
                     in ( Node x' xs', xs' /= xs )
                 | otherwise = (xNode, False)
 
-ac1 :: forall a. (Eq a, Show a) => Net a -> IO (Net a)
-ac1 net@(Net ns cs) = resultNet
+
+-- solve takes a net and returns a list of mappings
+solve :: forall a. (Eq a, Show a) => Net a -> [(NodeName, a)]
+solve = undefined
+
+-- Implementation von ac3. Kantenkonsistenz mit Full Lookahead
+-- ac3
+ac3 :: forall a. (Eq a, Show a) => Net a -> IO (Net a)
+ac3 net@(Net _ cs) = resultNet
     where        
         queue :: [Constraint a]
         queue = concatMap (\c -> [c, flop c]) cs    -- create initial queue of constraints.
-        
         resultNet = evalStateT reviser (net, queue)       -- evalState führt die Stateful Computation aus und gibt den Rückgabewert zurück
-        
         reviser :: Show a => StateT (S a) IO (Net a)
         reviser = do
             (net, cs) <- get
             lift $ putStr "Iteration: "
             lift $ print net
-            changes <- replicateM (length cs) checkSingleConstraint
+            changes <- replicateM (length cs) reduceSingleConstraint
             (newnet, _) <- get
-            if any (==True) changes
+            if True `elem` changes
                 then modify (\(n,_) -> (n,cs)) >> reviser
                 else return newnet
-
-
--- Implementation von ac3. Kantenkonsistenz mit Full Lookahead
--- ac3
 
 
 -- St a is the type used in the stateful computation.
 type S a = (Net a, [Constraint a])
     
-checkSingleConstraint :: Show a => StateT (S a) IO Bool
-checkSingleConstraint = 
+reduceSingleConstraint :: Show a => StateT (S a) IO Bool
+reduceSingleConstraint = 
     do
-        ((Net ns net_cs), cs) <- get
+        (Net ns ncs, cs) <- get
         case cs of
             [] -> return False
-            (c:cs') ->
+            (c:cr) ->
                 let (Binary name s1 s2 f _) = c
                     n1 = fromJust $ find (\n -> nodeName n == s1) ns
                     n2 = fromJust $ find (\n -> nodeName n == s2) ns
                     (n1', changed) = f n1 n2
                     ns' = replaceNode n1 n1' ns
-                    newnet = Net ns' net_cs
+                    newnet = Net ns' ncs
+                    inc = incoming (nodeName n1) ncs 
+                    relevant_neighbours = filter (\c -> cName1 c /= nodeName n2) inc
+                    cs' = relevant_neighbours ++ cr
                 in
                     do
                         when changed
-                            (lift (putStrLn $ s1 ++ " vs " ++ s2 ++ ": " ++ show n1 ++ " -> " ++ show n1'))
+                            (lift (putStrLn $ s1 ++ " vs " ++ s2 ++ ": " ++ show n1 ++ " -> " ++ show n1' ++ ", rn: " ++ show relevant_neighbours))
                         put (newnet, cs')
                         return changed
+
+incoming :: NodeName -> [Constraint a] -> [Constraint a]
+incoming n = filter (\c -> cName2 c == n)
 
 -- replaces first occurrence of x in the list by y
 replaceNode :: Node a -> Node a -> [Node a] -> [Node a]

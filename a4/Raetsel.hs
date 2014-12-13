@@ -17,5 +17,5 @@ net = Net
         ]
 
 
-main = ac1 net
+main = ac3 net
 
