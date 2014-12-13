@@ -37,8 +37,8 @@ data Constraint a =
 instance Show (Constraint a) where
     show (Binary s _ _ _ _) = "Binary " ++ s
 
-mkConstraint :: forall a. Eq a => (a -> a -> Bool) -> String-> NodeName -> NodeName -> Constraint a
-mkConstraint f name s1 s2 = Binary name s1 s2 g f
+mkConstraint :: forall a. Eq a => NodeName -> (a -> a -> Bool) -> NodeName -> String -> Constraint a
+mkConstraint s1 f s2 name = Binary name s1 s2 g f
     where
         g :: Node a -> Node a -> (Node a, Bool)
         g xNode@(x',xs) (y',ys)
@@ -48,14 +48,12 @@ mkConstraint f name s1 s2 = Binary name s1 s2 g f
                 | otherwise = (xNode, False)
 
 ac1 :: forall a. (Eq a, Show a) => Net a -> IO (Net a)
-ac1 net@(Net ns cs) = result
-    where
-        result = ns'
-        
+ac1 net@(Net ns cs) = resultNet
+    where        
         queue :: [Constraint a]
         queue = concatMap (\c -> [c, flop c]) cs    -- create initial queue of constraints.
         
-        ns' = evalStateT reviser (net, queue)
+        resultNet = evalStateT reviser (net, queue)       -- evalState führt die Stateful Computation aus und gibt den Rückgabewert zurück
         
         reviser :: Show a => StateT (S a) IO (Net a)
         reviser = do
@@ -67,6 +65,11 @@ ac1 net@(Net ns cs) = result
             if any (==True) changes
                 then modify (\(n,_) -> (n,cs)) >> reviser
                 else return newnet
+
+
+-- Implementation von ac3. Kantenkonsistenz mit Full Lookahead
+-- ac3
+
 
 -- St a is the type used in the stateful computation.
 type S a = (Net a, [Constraint a])
@@ -100,5 +103,5 @@ replaceNode x y (b:bs)
 
 -- flop takes a Constraint and builds its flipped Constraint.
 flop :: (Show a, Eq a) => Constraint a -> Constraint a
-flop (Binary name s1 s2 c f) = mkConstraint (flip f) name s2 s1 
+flop (Binary name s1 s2 c f) = mkConstraint s2 (flip f) s1 name
 

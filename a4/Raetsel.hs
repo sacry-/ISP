@@ -1,14 +1,6 @@
 
 import Constraints
 
-equals, mult2equals, smallerThan :: String -> String -> Constraint Int
-
-equals x y = mkConstraint (==) (show x ++ " == " ++ show y) x y
-
-mult2equals x y = mkConstraint (\x y -> x*2 == y) (show x ++ " *2 == " ++ show y) x y
-
-smallerThan x y = mkConstraint (<) (show x ++ " < " ++ show y) x y
-
 net :: Net Int
 net = Net
         [
@@ -18,10 +10,10 @@ net = Net
             ("Z", [1,2,3,4])
         ]
         [
-            "X" `equals` "V" ,
-            "X" `mult2equals` "Z",
-            "X" `smallerThan` "Y",
-            "Y" `equals` "Z"
+            mkConstraint "X" (==) "V"               "X = V",
+            mkConstraint "X" (\x z -> x*2 == z) "Z" "X *2 = Z",
+            mkConstraint "X" (<) "Y"                "X < Y",
+            mkConstraint "Y" (==) "Z"               "Y = Z"
         ]
 
 
