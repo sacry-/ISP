@@ -1,4 +1,5 @@
 
+import Solving
 import Constraints
 import Control.Monad
 
