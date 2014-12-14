@@ -121,9 +121,8 @@ net = Net
 
 -- main = ac3 `with` fullLookAhead net
 main :: IO ()
-main = ac3 net >>= \res ->
-        print "" >>
-        return ()
+main = let sol = head $ solve net
+       in  mapM_ (\(n, ls) -> putStrLn $ n ++ " -> " ++ show ls) sol
 
 {-
 colors = ["red", "green", "white", "blue", "yellow"]

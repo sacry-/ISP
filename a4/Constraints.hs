@@ -63,14 +63,14 @@ mkConstraint s1 f s2 name = Binary name s1 s2 g f
         g xNode@(Node x' xs) (Node y' ys)
                 | x' == s1 && y' == s2 =
                     let xs' = [ x | x <- xs, any (f x) ys] -- dies hier ist eine Implementation des REVISE Algorithmus
-                    in -- trace (name ++ " on " ++ show (head xs) ++ " vs " ++ show (head ys) ++ " -> " ++ show (xs' /= xs))
-                      ( Node x' xs', xs' /= xs )
+                    in ( Node x' xs', xs' /= xs )
                 | otherwise = (xNode, False)
 
 
 type Solution a = [(NodeName, a)]
 
 -- solve takes a net and returns a list of solutions
+-- uses ac3 with Full Lookahead
 solve :: forall a. (Eq a, Show a) => Net a -> [Solution a]
 solve net_ = case inspect net of
                 OK solution -> [solution]
@@ -110,9 +110,8 @@ expandFirstNode curr@(Net ns_ cs) =
             (\(Net ns' cs) -> Net (n:ns') cs) `map` expandFirstNode (Net ns cs)
 --
 
--- Implementation von ac3. Kantenkonsistenz mit Full Lookahead
--- ac3
-ac3 :: forall a. (Eq a, Show a) => Net a -> (Net a)
+-- Implementation von ac3. Kantenkonsistenz
+ac3 :: forall a. (Eq a, Show a) => Net a -> Net a
 ac3 net@(Net _ cs) = resultNet
     where        
         queue :: [Constraint a]
@@ -121,14 +120,11 @@ ac3 net@(Net _ cs) = resultNet
         reviser :: Show a => StateT (S a) Identity (Net a)
         reviser = do
             (net, cs) <- get
-            -- lift $ putStr "Iteration: "
-            -- lift $ print net
             if null cs
                 then return net
                 else reduceSingleConstraint >> reviser
 
 
--- St a is the type used in the stateful computation.
 type S a = (Net a, [Constraint a])
     
 reduceSingleConstraint :: Show a => StateT (S a) Identity Bool
@@ -149,10 +145,6 @@ reduceSingleConstraint =
                     cs' = relevant_neighbours ++ cr
                 in
                     do
-                        --lift (putStrLn $ name ++ ": " ++ show changed ++ ", rn: " ++ show relevant_neighbours)
-                        --when changed
-                        --    (lift (putStrLn $ s1 ++ " vs " ++ s2 ++ ": " ++ show n1 ++ " -> " ++ show n1' ++ ", remaining: " ++  (show $ length cs') ))
-                        -- lift getLine
                         put (newnet, cs')
                         return changed
 
