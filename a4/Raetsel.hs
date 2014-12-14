@@ -17,5 +17,6 @@ net = Net
         ]
 
 
-main = ac3 net
+-- main = ac3 net
+main = print $ solve net
 

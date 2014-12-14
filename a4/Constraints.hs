@@ -28,6 +28,9 @@ var = Node
 nodeName :: Node a -> String
 nodeName (Node s _) = s
 
+domain :: Node a -> Domain a
+domain (Node _ xs) = xs
+
 -- Net a ist ein Constraint Netz dessen Werte Elemente vom Typ a haben können.
 data Net a = Net [Node a] [Constraint a] deriving Show
 -- Ein Constraint ist eine unäre/binäry Funktion die ein Node nimmt
@@ -65,13 +68,32 @@ mkConstraint s1 f s2 name = Binary name s1 s2 g f
                 | otherwise = (xNode, False)
 
 
--- solve takes a net and returns a list of solutions
 type Solution a = [(NodeName, a)]
+
+-- solve takes a net and returns a list of solutions
 solve :: forall a. (Eq a, Show a) => Net a -> [Solution a]
-solve net = let net' = ac3 net
-                nets = expandFirstNode net'
-            in  concatMap solve nets
---
+solve net_ = case inspect net of
+                OK solution -> [solution]
+                Empty       -> []
+                Expandable  -> expandedSolutions
+    where
+        net = ac3 net_
+        nets = map ac3 $ expandFirstNode net
+        expandedSolutions = concatMap solve nets
+
+data Inspection a =
+    OK (Solution a)
+    | Empty
+    | Expandable
+
+-- getSolution returns a solution to the net,
+-- if the net already has single elements as its domain
+inspect :: Net a -> Inspection a
+inspect (Net ns _)
+    | any (null . domain) ns                 = Empty
+    | any (not . null . drop 1 . domain) ns  = Expandable
+    | all (null . drop 1 . domain) ns        = OK $ map (\(Node s [x]) -> (s,x)) ns
+    | otherwise = error "Net neither empty, expandable nor has a solution."
 
 -- returns a list of nets where the first node with more than element in domain has been reduced to a singlenton element domain
 -- returns empty if there aren't any expansions
