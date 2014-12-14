@@ -5,9 +5,14 @@ module Constraints (
         Domain, NodeName,
         mkConstraint, var,
         ac3, solve
+        
+        
+        -- for testing
+        ,expandFirstNode
     ) where
 
 import Control.Monad.State.Strict
+import Control.Monad.Identity
 import Data.List (find)
 import Data.Maybe (fromJust)
 import Debug.Trace
@@ -25,7 +30,6 @@ nodeName (Node s _) = s
 
 -- Net a ist ein Constraint Netz dessen Werte Elemente vom Typ a haben können.
 data Net a = Net [Node a] [Constraint a] deriving Show
-
 -- Ein Constraint ist eine unäre/binäry Funktion die ein Node nimmt
 -- und ein Node zurückliefert, bei dem fehlerhafte Elemente aus der Domain entfernt wurden.
 -- Bei binären Constraints werden für Elemente der ersten Menge Partner in der Zweiten gesucht.
@@ -61,19 +65,38 @@ mkConstraint s1 f s2 name = Binary name s1 s2 g f
                 | otherwise = (xNode, False)
 
 
--- solve takes a net and returns a list of mappings
-solve :: forall a. (Eq a, Show a) => Net a -> [(NodeName, a)]
-solve = undefined
+-- solve takes a net and returns a list of solutions
+type Solution a = [(NodeName, a)]
+solve :: forall a. (Eq a, Show a) => Net a -> [Solution a]
+solve net = let net' = ac3 net
+                nets = expandFirstNode net'
+            in  concatMap solve nets
+--
+
+-- returns a list of nets where the first node with more than element in domain has been reduced to a singlenton element domain
+-- returns empty if there aren't any expansions
+expandFirstNode :: forall a. Net a -> [Net a]
+expandFirstNode curr@(Net ns_ cs) =
+    case ns_ of 
+        [] -> []    -- falls ich keine Nodes habe, dann gibts keine relevanten Netze
+        ((Node s xs@(_:_:_)):ns) ->     -- falls die Domain des ersten Elements >= 2 ist:
+            let newNodess :: [ [Node a] ]
+                newNodess = (\x -> (Node s [x]):ns ) `map` xs   -- erzeugen der Liste an [Node] wobei jede NodeList ein anderes Element x ausgewählt hat
+                nets = map (\nss -> Net nss cs) newNodess       -- aus jedem NodeList ´wird ein netz erzeugt.
+            in  nets
+        (n:ns) ->   -- falls der aktuelle Knoten nicht mehr als zwei Elemente hat, wird rekursiv ein nachfolgender Knoten reduziert.
+            (\(Net ns' cs) -> Net (n:ns') cs) `map` expandFirstNode (Net ns cs)
+--
 
 -- Implementation von ac3. Kantenkonsistenz mit Full Lookahead
 -- ac3
-ac3 :: forall a. (Eq a, Show a) => Net a -> IO (Net a)
+ac3 :: forall a. (Eq a, Show a) => Net a -> (Net a)
 ac3 net@(Net _ cs) = resultNet
     where        
         queue :: [Constraint a]
         queue = concatMap (\c -> [c, flop c]) cs    -- create initial queue of constraints.
-        resultNet = evalStateT reviser (net, queue)       -- evalState führt die Stateful Computation aus und gibt den Rückgabewert zurück
-        reviser :: Show a => StateT (S a) IO (Net a)
+        resultNet = runIdentity $ evalStateT reviser (net, queue)       -- evalState führt die Stateful Computation aus und gibt den Rückgabewert zurück
+        reviser :: Show a => StateT (S a) Identity (Net a)
         reviser = do
             (net, cs) <- get
             -- lift $ putStr "Iteration: "
@@ -86,7 +109,7 @@ ac3 net@(Net _ cs) = resultNet
 -- St a is the type used in the stateful computation.
 type S a = (Net a, [Constraint a])
     
-reduceSingleConstraint :: Show a => StateT (S a) IO Bool
+reduceSingleConstraint :: Show a => StateT (S a) Identity Bool
 reduceSingleConstraint = 
     do
         (Net ns ncs, cs) <- get
@@ -105,8 +128,8 @@ reduceSingleConstraint =
                 in
                     do
                         --lift (putStrLn $ name ++ ": " ++ show changed ++ ", rn: " ++ show relevant_neighbours)
-                        when changed
-                            (lift (putStrLn $ s1 ++ " vs " ++ s2 ++ ": " ++ show n1 ++ " -> " ++ show n1' ++ ", remaining: " ++  (show $ length cs') ))
+                        --when changed
+                        --    (lift (putStrLn $ s1 ++ " vs " ++ s2 ++ ": " ++ show n1 ++ " -> " ++ show n1' ++ ", remaining: " ++  (show $ length cs') ))
                         -- lift getLine
                         put (newnet, cs')
                         return changed
