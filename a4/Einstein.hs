@@ -1,7 +1,8 @@
 import Constraints
-import Data.List
+import Data.List hiding (all)
 import Data.Maybe
 import Debug.Trace
+import Prelude  hiding (all)
 
 -- main = ac3 `with` fullLookAhead net
 main :: IO ()
@@ -13,12 +14,12 @@ main =
 net :: Net (Mapping String)
 net = Net
         [   
-            var "pos" (mkDom ps [L .. R]),
-            var "nat" (mkDom ps [Brit .. German]),
-            var "col" (mkDom ps [Red .. Yellow]),
-            var "drk" (mkDom ps [Tea .. Water]),
-            var "cgr" (mkDom ps [Pallmall .. Rothmanns]),
-            var "ani" (mkDom ps [Dog .. Fish])
+             var "pos" $ mkDom ps (all :: [Position])
+            ,var "nat" $ mkDom ps (all :: [Nationality])
+            ,var "col" $ mkDom ps (all :: [Color])
+            ,var "drk" $ mkDom ps (all :: [Drink])
+            ,var "cgr" $ mkDom ps (all :: [Cigarete])
+            ,var "ani" $ mkDom ps (all :: [Animal])
         ]
         [   
             mkConstraint "nat" c1 "col" "Der Brite lebt im roten Haus.",
@@ -48,7 +49,7 @@ c1 nm cm = personBy Brit nm == personBy Red cm
 c2 nm cm = personBy Swed nm == personBy Dog cm
 c3 nm cm = personBy Dane nm == personBy Tea cm
 
-c4 cm ps = p1Pos /= (maxBound :: Pos) && succ p1Pos == p2Pos
+c4 cm ps = p1Pos /= (maxBound :: Position) && succ p1Pos == p2Pos
     where
         p1 = personBy Green cm
         p2 = personBy White cm
@@ -72,10 +73,10 @@ c15 nm cm = undefined
 data Person = A | B | C | D | E 
     deriving(Show, Eq, Bounded, Enum)
 
-data Pos = L | HL | M | HR | R 
+data Position = L | HL | M | HR | R 
     deriving(Show, Eq, Bounded, Enum, Read)
 
-data Nat = Brit | Swed | Dane | Norwegian | German 
+data Nationality = Brit | Swed | Dane | Norwegian | German 
     deriving(Show, Eq, Bounded, Enum)
 
 data Color = Red | Green | White | Blue | Yellow 
@@ -90,16 +91,16 @@ data Cigarete = Pallmall | Dunhill | Malboro | Winfield | Rothmanns
 data Animal = Dog | Cat | Bird | Horse | Fish 
     deriving(Show, Eq, Bounded, Enum)
 
+type Mapping a = [(Person, a)]
+
 ps :: [Person]
 ps = [A .. E]
-
-makeNodes :: [Nat] -> [Person] -> Node (Mapping String)
-makeNodes nats ps = var "nat" (mkDom ps nats)
 
 mkDom :: Show a => [Person] -> [a] -> Domain (Mapping String)
 mkDom ps elems = map (\perm -> to5Tuple ps perm) (permutations elems) 
 
-type Mapping a = [(Person, a)]
+all :: (Bounded a, Enum a) => [a]
+all = [minBound .. maxBound]
 
 to5Tuple :: Show a => [Person] -> [a] -> Mapping String
 to5Tuple xs@(_:_:_:_:_:[]) ys@(_:_:_:_:_:[]) =
