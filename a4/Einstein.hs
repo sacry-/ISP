@@ -1,7 +1,9 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 import Constraints
 import Data.List hiding (all)
 import Data.Maybe
 import Debug.Trace
+import Control.Applicative
 import Prelude  hiding (all)
 
 -- main = ac3 `with` fullLookAhead net
@@ -11,8 +13,8 @@ main =
     in  mapM_ printSolution sols
 
 
-net :: Net (Mapping String)
-net = Net
+net :: Net MS
+net = addTripleConstraints $ Net
         [   
              var "pos" $ mkDom ps (all :: [Position])
             ,var "nat" $ mkDom ps (all :: [Nationality])
@@ -30,20 +32,80 @@ net = Net
             mkConstraint "cgr" c6 "ani" "Die Person, die Pall Mall raucht, hat einen Vogel.",
             mkConstraint "pos" c7 "drk" "Der Mann im mittleren Haus trinkt Milch.",
             mkConstraint "col" c8 "cgr" "Der Bewohner des gelben Hauses raucht Dunhill.",
-
             mkConstraint "nat" c9 "pos" "Der Norweger lebt im ersten Haus.",
-            -- 3facher constraint... complicated..
-            -- mkConstraint "col" c10 "cgr" "Der Malboro-Raucher wohnt neben der Person mit der Katze.",
-            -- mkConstraint "col" c11 "cgr" "Der Mann mit dem Pferd lebt neben der Person, die Dunhill raucht.",
-            
             mkConstraint "cgr" c12 "drk" "Der Winfield-Raucher trinkt gern Bier.",
-            -- mkConstraint "nat" c13 "col" "Der Norweger wohnt neben dem blauen Haus.",
             mkConstraint "nat" c14 "cgr" "Der Deutsche raucht Rothmanns."
-            -- 3facher constraint... complicated..
-            -- mkConstraint "col" c15 "cgr" "Der Malboro-Raucher hat einen Nachbarn, der Wasser trinkt."
         ]
 
-c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15 :: Mapping String -> Mapping String -> Bool
+addTripleConstraints :: Net MS -> Net MS
+addTripleConstraints net = 
+        let netZ = addConstraint3 net "cgr" "pos" "ani" c10 "Der Malboro-Raucher wohnt neben der Person mit der Katze." 
+          --  net3 = addConstraint3 net2 "cgr" "pos" "drk" c11 "name"
+          --  net4 = addConstraint3 net3 "cgr" "pos" "drk" c13 "name"
+          --  netZ = addConstraint3 net4 "cgr" "pos" "drk" c15 "name"
+        in  netZ
+            -- mkConstraint "col" c10 "cgr" "Der Malboro-Raucher wohnt neben der Person mit der Katze.",
+            -- 3facher constraint... complicated..
+            -- mkConstraint "col" c15 "cgr" "Der Malboro-Raucher hat einen Nachbarn, der Wasser trinkt."
+            -- mkConstraint "col" c11 "cgr" "Der Mann mit dem Pferd lebt neben der Person, die Dunhill raucht.",
+            -- mkConstraint "nat" c13 "col" "Der Norweger wohnt neben dem blauen Haus.",
+
+-- net "cgr" "pos" "ani" c10 "Der Malboro-Raucher wohnt neben der Person mit der Katze."
+
+type MS = Mapping String
+
+addConstraint3 :: forall a b c.
+    Net MS
+    -> NodeName -> NodeName -> NodeName
+    -> (MS -> MS -> MS -> Bool)
+    -> (a,b,c)
+    -> String
+    -> Net MS
+addConstraint3 (Net ns cs) s1 s2 s3 f cname = Net ns' cs'
+    where
+        ns' :: [Node MS]
+        ns' = hiddenU:ns
+        hiddenU :: Node MS
+        hiddenU = var cname (map msTpl2ms uDom)
+        uDom :: Domain (MS,MS,MS)
+        uDom = filter (\(a,b,c) -> f a b c) $ (,,) <$> d1 <*> d2 <*> d3
+        d1 :: Domain MS
+        (Node _ d1) = findNode s1 ns
+        (Node _ d2) = findNode s2 ns
+        (Node _ d3) = findNode s3 ns
+
+        cs' = cs ++ [
+                undefined -- mkConstraint cname f1 s1 (s1 ++ ": " ++ cname)
+                -- TODO
+            ]
+        f1 :: MS -> MS -> Bool
+        f1 = undefined -- TODO
+
+        ms2msTpl :: MS -> (MS,MS,MS)
+        ms2msTpl = ms2msTpl -- TODO
+
+
+        -- ( [(A,"Brit"), (B,"Dane")], [(A,"Cat"), (B,"Dog")], [(B,"Water"), (A,"Beer")] )
+        -- =>
+        -- [ (A, "(Brit,Cat,Beer)"), (B, "(Dane,Dog,Water)") ]
+
+        msTpl2ms :: (MS, MS, MS) -> MS
+        msTpl2ms (xs, ys, zs) = map addString [A .. E]
+            where
+                addString :: Person -> (Person, String)
+                addString p = 
+                    let properties = show
+                            (
+                                (propertyBy p xs) :: a,
+                                (propertyBy p ys) :: b,
+                                (propertyBy p zs) :: c
+                            )
+                    in  (p, properties)
+
+
+
+
+c1, c2, c3, c4, c5, c6, c7, c8, c9, c12, c14 :: MS -> MS -> Bool
 
 c1 nm cm = personBy Brit nm == personBy Red cm
 c2 nm cm = personBy Swed nm == personBy Dog cm
@@ -62,12 +124,22 @@ c7 nm cm = personBy M nm == personBy Milk cm
 c8 nm cm = personBy Yellow nm == personBy Dunhill cm
 
 c9 nm cm = personBy Norwegian nm == personBy L cm
-c10 nm cm = undefined
-c11 nm cm = undefined
 c12 nm cm = personBy Winfield nm == personBy Beer cm
-c13 nm cm = undefined
-
 c14 nm cm = personBy German nm == personBy Rothmanns cm
+
+-- Der Malboro-Raucher wohnt neben der Person mit der Katze.
+c10, c11, c13, c15 :: MS -> MS -> MS -> Bool
+c10 cm pm am = absDiff (fromEnum p1Pos) (fromEnum p2Pos) == 1
+    where
+        p1 = personBy Malboro cm
+        p2 = personBy Cat am
+        p1Pos, p2Pos :: Position
+        p1Pos = propertyBy p1 pm
+        p2Pos = propertyBy p2 pm
+        absDiff a b = abs(a - b)
+
+c11 nm cm = undefined
+c13 nm cm = undefined
 c15 nm cm = undefined
 
 data Person = A | B | C | D | E 
@@ -96,21 +168,24 @@ type Mapping a = [(Person, a)]
 ps :: [Person]
 ps = [A .. E]
 
-mkDom :: Show a => [Person] -> [a] -> Domain (Mapping String)
+mkDummydom :: [a] -> Domain MS
+mkDummydom ps = map (\p -> [(undefined, show p)]) ps
+
+mkDom :: Show a => [Person] -> [a] -> Domain MS
 mkDom ps elems = map (\perm -> to5Tuple ps perm) (permutations elems) 
 
 all :: (Bounded a, Enum a) => [a]
 all = [minBound .. maxBound]
 
-to5Tuple :: Show a => [Person] -> [a] -> Mapping String
+to5Tuple :: Show a => [Person] -> [a] -> MS
 to5Tuple xs@(_:_:_:_:_:[]) ys@(_:_:_:_:_:[]) =
     zipWith (\x y -> (x, show y)) xs ys
 to5Tuple _ _ = error "Sorry, elems have to be of length 5 :("
 
-personBy :: Show a => a -> Mapping String -> Person
+personBy :: Show a => a -> MS -> Person
 personBy a = fst . fromJust . find (\(p,nat) -> (nat == show a))
 
-propertyBy :: Read a => Person -> Mapping String -> a
+propertyBy :: Read a => Person -> MS -> a
 propertyBy p = read . snd . fromJust . find (\(p', pos) -> p' == p)
 
 printSolution sols =
