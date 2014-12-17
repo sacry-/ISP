@@ -70,9 +70,9 @@ neighbour :: Int -> Int -> Bool
 neighbour a b = abs (a - b) == 1
 
 printSolution :: forall a. (Ord a, Show a) => [(String, a)] -> IO ()
-printSolution sols = mapM_ printPos grouped >> putStrLn ("The " ++ winner grouped ++ " owns the fish") >> putStrLn "-------------"
+printSolution sols = mapM_ printPos grouped >> putStrLn ("The " ++ owner grouped ++ " owns the fish") >> putStrLn "-------------"
         where
             sorted = sortBy (comparing snd) sols
             grouped = groupBy ((==) `on` snd) sorted -- [[(String, Int)]]
-            winner = show . fst . head . fromJust . find (\ls -> fst (last ls) == "fish")
+            owner = show . fst . head . fromJust . find (\ls -> fst (last ls) == "fish")
             printPos ls = print $ show (snd (head ls)) ++ ": " ++ intercalate ", " (map fst ls)
