@@ -1,7 +1,7 @@
 
 module Constraints (
         Net(..), Constraint, Node(..),
-        Domain, NodeName,
+        Domain, NodeName, nodeName,
         mkConstraint, findNode, var,
         ac3, solve
     ) where
