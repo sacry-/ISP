@@ -45,7 +45,7 @@ data Constraint a =
         ,cNode2 :: NodeName -- name des ersten Knotens
         ,apply :: (Node a -> Node a -> (Node a, Bool)) -- Funktion
         ,originalFunction :: (a -> a -> Bool) -- Kopie der originalen Funktion
-        }
+    }
     
 instance Show (Constraint a) where
     show c = "Constraint " ++ cName c

@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module ArcConsistency (
-        mkConstraint, findNode, ac3
+        mkConstraint, applyUnaryConstraint, findNode, ac3
     )
     where
 
@@ -66,6 +66,13 @@ mkConstraint s1 f s2 name = Binary name s1 s2 g f
                     let xs' = [ x | x <- xs, any (f x) ys] -- dies hier ist eine Implementation des REVISE Algorithmus
                     in ( Node x' xs', xs' /= xs )
                 | otherwise = (xNode, False)
+
+applyUnaryConstraint :: Net a -> NodeName -> (a -> Bool) -> Net a
+applyUnaryConstraint (Net ns cs) s f = Net ns' cs
+    where
+        n@(Node _ dom) = findNode s ns
+        n' = Node s (filter f dom)
+        ns' = replaceNode n n' ns
 
 findNode :: NodeName -> [Node a] -> Node a
 findNode s ns = fromJust $ find (\n -> nodeName n == s) ns

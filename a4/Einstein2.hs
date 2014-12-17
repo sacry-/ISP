@@ -3,89 +3,72 @@
 
 import Constraints
 import Data.List hiding (all)
-import Data.Maybe
-import Debug.Trace
-import Control.Applicative
 import Prelude  hiding (all)
+import Data.Ord
 
 -- main = ac3 `with` fullLookAhead net
 main :: IO ()
 main = 
-    let sols = take 3 $ solve netEinstein
+    let sols = solve netEinstein
     in  mapM_ printSolution sols
 
+netEinstein :: Net Int
+netEinstein = applyUnaryConstraints $ Net nodes constraints
 
-netEinstein, netSimple :: Net Person
-netEinstein = {-addTripleConstraints-} netSimple
+ps :: [Int]
+ps = [0..4]
 
-netSimple = Net
-        [
-             var "brit" ps,
-             var "swed" ps,
-             var "dane" ps,
-             var "norwegian" ps,
-             var "german" ps,
+nat, col, drink, cigar, anim :: [String]
+nat = ["brit", "swed", "dane", "german", "norwegian"]
+col = ["red", "green", "white", "blue", "yellow"]
+drink = ["tea", "coffee", "milk", "beer", "water"]
+cigar = ["pallmall", "dunhill", "malboro", "rothmanns", "winfield"]
+anim = ["dog", "cat", "bird", "fish", "horse"]
 
-             var "l" ps,
-             var "hl" ps,
-             var "m" ps,
-             var "hr" ps,
-             var "r" ps,
+nodes :: [Node Int]
+nodes = map (\a -> var a ps) (nat ++ col ++ drink ++ cigar ++ anim)
 
-             var "red" ps,
-             var "white" ps,
-             var "blue" ps,
-             var "green" ps,
-             var "yellow" ps,
 
-             var "tea" ps,
-             var "coffee" ps,
-             var "milk" ps,
-             var "beer" ps,
-             var "water" ps,
+constraints :: [Constraint Int]
+constraints = [   
+        mkConstraint "brit" (==) "red" "Der Brite lebt im roten Haus.",
+        mkConstraint "swed" (==) "dog" "Der Schwede hält sich einen Hund.",
+        mkConstraint "dane" (==) "tea" "Der Däne trinkt gern Tee.",
+        mkConstraint "green" ((==) . succ) "white" "Das grüne Haus steht links neben dem weißen Haus.",
+        mkConstraint "green" (==) "coffee" "Der Besitzer des grünen Hauses trinkt Kaffee.",
+        mkConstraint "pallmall" (==) "bird" "Die Person, die Pall Mall raucht, hat einen Vogel.",
+        mkConstraint "yellow" (==) "dunhill" "Der Bewohner des gelben Hauses raucht Dunhill.",
+        mkConstraint "winfield" (==) "beer" "Der Winfield-Raucher trinkt gern Bier.",
+        mkConstraint "german" (==) "rothmanns" "Der Deutsche raucht Rothmanns.",
+        mkConstraint "malboro" neighbour "cat" "Der Malboro-Raucher wohnt neben der Person mit der Katze.",
+        mkConstraint "malboro" neighbour "water" "Der Malboro-Raucher hat einen Nachbarn, der Wasser trinkt.",
+        mkConstraint "horse" neighbour "dunhill" "Der Mann mit dem Pferd lebt neben der Person, die Dunhill raucht.",
+        mkConstraint "norwegian" neighbour "blue" "Der Norweger wohnt neben dem blauen Haus."
+    ] ++ diffConstraints
 
-             var "pallmall" ps,
-             var "dunhill" ps,
-             var "malboro" ps,
-             var "rothmanns" ps,
-             var "winfield" ps,
+diffConstraints :: [Constraint Int]
+diffConstraints = concatMap allDiff [nat, col, drink, cigar, anim]
 
-             var "dog" ps,
-             var "cat" ps,
-             var "bird" ps,
-             var "fish" ps,
-             var "horse" ps
-        ]
-        [   
-            mkConstraint "brit" (==) "red" "Der Brite lebt im roten Haus.",
-            mkConstraint "swed" (==) "dog" "Der Schwede hält sich einen Hund.",
-            mkConstraint "dane" (==) "tea" "Der Däne trinkt gern Tee.",
-            mkConstraint "green" (==) "coffee" "Der Besitzer des grünen Hauses trinkt Kaffee.",
-            mkConstraint "pallmall" (==) "bird" "Die Person, die Pall Mall raucht, hat einen Vogel.",
-            mkConstraint "m" (==) "milk" "Der Mann im mittleren Haus trinkt Milch.",
-            mkConstraint "yellow" (==) "dunhill" "Der Bewohner des gelben Hauses raucht Dunhill.",
-            mkConstraint "norwegian" (==) "l" "Der Norweger lebt im ersten Haus.",
-            mkConstraint "winfield" (==) "beer" "Der Winfield-Raucher trinkt gern Bier.",
-            mkConstraint "german" (==) "rothmanns" "Der Deutsche raucht Rothmanns."
-        ]
-{-
-addTripleConstraints :: Net MS -> Net MS
-addTripleConstraints net0 =
-        let net1 = addConstraint3 net0 "cgr" "pos" "ani" c10 t10 "Der Malboro-Raucher wohnt neben der Person mit der Katze."
-            net2 = addConstraint3 net1 "cgr" "pos" "drk" c11 t11 "Der Malboro-Raucher hat einen Nachbarn, der Wasser trinkt."
-            net3 = addConstraint3 net2 "ani" "pos" "cgr" c13 t13 "Der Mann mit dem Pferd lebt neben der Person, die Dunhill raucht."
-            netZ = addConstraint3 net3 "nat" "pos" "col" c15 t15 "Der Norweger wohnt neben dem blauen Haus."
-            mkConstraint "green" c4 "white" "Das grüne Haus steht links neben dem weißen Haus."
-        in  net1
--}
+applyUnaryConstraints :: Net Int -> Net Int
+applyUnaryConstraints n0 =
+    let n1 = applyUnaryConstraint n0 "milk" (==middle) -- Der Mann im mittleren Haus trinkt Milch.
+        n2 = applyUnaryConstraint n1 "norwegian" (==left) -- Der Norweger lebt im ersten Haus.
+    in  n2
+    where
+        middle = ps !! 2
+        left = ps !! 0
 
-data Person = A | B | C | D | E | Triple (Person, Person, Person)
-    deriving(Show, Eq, Read)
+allDiff :: [String] -> [Constraint Int]     
+allDiff ls = [f a b | a <- ls, b <- ls, a /= b]
+    where
+        f :: String -> String -> Constraint Int
+        f a b = mkConstraint a (/=) b (a ++ " /= " ++ b)
 
-ps :: [Person]
-ps = [A, B, C, D, E]
+neighbour :: Int -> Int -> Bool
+neighbour a b = abs (a - b) == 1
 
-printSolution sols =
-    mapM_ (\(n, ls) -> putStrLn $ n ++ " -> " ++ show ls) sols
-    >> putStrLn "-------------"
-
+printSolution sols = mapM_ printPos grouped >> putStrLn "-------------"
+    where
+        sorted = sortBy (comparing snd) sols
+        grouped = groupBy (\a b -> snd a == snd b) sorted
+        printPos ls = print $ show (snd (head ls)) ++ ": " ++ intercalate ", " (map fst ls)

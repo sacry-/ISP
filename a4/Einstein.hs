@@ -11,12 +11,14 @@ import Prelude  hiding (all)
 -- main = ac3 `with` fullLookAhead net
 main :: IO ()
 main = 
-    let sols = take 3 $ solve net
+    let sols = take 3 $ solve netEinstein
     in  mapM_ printSolution sols
 
 
-net :: Net MS
-net = addTripleConstraints $ Net
+netEinstein, netSimple :: Net MS
+netEinstein = addTripleConstraints netSimple
+
+netSimple = Net
         [   
              var "pos" $ mkDom ps (all :: [Position])
             ,var "nat" $ mkDom ps (all :: [Nationality])
@@ -45,7 +47,7 @@ addTripleConstraints net0 =
             net2 = addConstraint3 net1 "cgr" "pos" "drk" c11 t11 "Der Malboro-Raucher hat einen Nachbarn, der Wasser trinkt."
             net3 = addConstraint3 net2 "ani" "pos" "cgr" c13 t13 "Der Mann mit dem Pferd lebt neben der Person, die Dunhill raucht."
             netZ = addConstraint3 net3 "nat" "pos" "col" c15 t15 "Der Norweger wohnt neben dem blauen Haus."
-        in  netZ
+        in  net1
 
 -- net "cgr" "pos" "ani" c10 "Der Malboro-Raucher wohnt neben der Person mit der Katze."
 
